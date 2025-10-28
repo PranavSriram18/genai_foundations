@@ -179,7 +179,7 @@ passing information forward in time through attention, and upwards in depth thro
 
 ---
 
-## 4. Anatomy of Causal Attention: QK and OV Circuits
+## 4. Anatomy of Causal Attention
 We'll now revisit how ordinary attention works, with an emphasis on (a) motivating it from first
 principles, and (b) highlighting aspects particularly salient to the frames we're developing. 
 
@@ -226,21 +226,26 @@ $$
 $$
 
 
-### 4.2 Takeaways for Interpretability
+### 4.2 Interpretability Takeaways: QK and OV circuits
 Below are a few important implications of the attention mechanism on how information flows through
 a transformer model. 
 
 ![QK Image](../img/post0/qk.svg)
 
 <span class="idea">Separation of Concerns:</span> queries and keys decide <span class="idea">where
-to read</span>; values and $W_O$ determine <span class="idea">what to write</span>. In
-interpretability terms, this separation is described as <span class="term">QK and OV circuits</span>, which are depicted visually in the figure above. 
+to read</span>; values and $W_O$ determine <span class="idea">what to write</span>. These circuits
+decompose information flow into <span class="idea">edge-disjoint subgraphs</span> called
+<span class="term">QK and OV circuits</span>, as depicted in the figure above.
 
-<span class="idea">Linearity Modulo Attention Pattern:</span> the only source of nonlinearity comes from the softmax operation, which is part of the QK circuit
+<span class="idea">Linearity Modulo Attention Pattern:</span> the only source of nonlinearity comes
+from the softmax operation, which is part of the QK circuit
 (determining the attention pattern). If we fix the attention pattern, the entire attention operation
-becomes a linear function of its inputs.
+becomes a linear function of its inputs. Freezing attention patterns thus allows interpreting
+OV circuits formed by stacking attention layers (without MLPs), a lens adopted extensively in
+Anthropic's circuits paper.
 
-<span class="idea">Additive Integration:</span> the imported content is added to the residual state; nothing is overwritten outright.
+<span class="idea">Additive Integration:</span> the imported content is added to the residual state;
+nothing is overwritten outright. We'll see implications of this in Section 6.2.
 
 Understanding these properties of attention is essential for understanding more complex circuits
 composed of multiple attention layers. 
