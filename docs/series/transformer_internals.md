@@ -9,8 +9,8 @@ article is to bridge the gulf between introductory material and the rapidly evol
 these fields, and deepen readers' intuition on Transformer internals and attention variants.
 
 In particular, our (perhaps ambitious) thesis is: despite the diversity of
-ideas in this space, <span class="term">**a handful of mental models
-and metaphors is sufficient to understand the research frontier**</span>.
+ideas in this space, <span class="idea">a handful of mental models
+and metaphors is sufficient to understand the research frontier</span>.
 
 ![Lead Image](../img/post0/lead-image.svg)
 
@@ -115,9 +115,9 @@ its residual stream.
 3. At the final layer, the representation is multiplied by the <span class="term">unembedding matrix</span> to produce <span class="term">logits</span>
    over the vocabulary, which are then normalized into a probability distribution for the next token.
 
-We can thus think of the residual stream as an <span class="idea">**information highway**</span>, in which the current
+We can thus think of the residual stream as an <span class="idea">information highway</span>, in which the current
 token evolves through a progressive sequence of representations that culminate in a [sufficient statistic](https://www.youtube.com/watch?v=5j4E2FRR384) for
- the distribution of the next token. Importantly, this highway has a <span class="term">fixed bandwidth</span>, dictated by
+ the distribution of the next token. Importantly, this highway has a <span class="idea">fixed bandwidth</span>, dictated by
  the dimensionality $D$ of the residual stream state. 
 
 ### 3.3 Residual Actors and Attention as an Interface
@@ -430,6 +430,7 @@ In Sliding Window Attention, each actor attends only to its $w$ most recent neig
 ```math
 N(t, l) = \{(\max(1, t-w+1), l), \ldots, (t, l)\}
 ```
+
 
 
 
