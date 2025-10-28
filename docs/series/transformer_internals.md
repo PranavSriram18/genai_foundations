@@ -135,13 +135,10 @@ We can frame the two core operations within a layer as follows:
 
 
 $$
-\begin{aligned}
-&\texttt{\# Attention: collaboration step — pull from previous actors at the same layer} \\
-& z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
-\\
-&\texttt{\# MLP: solo step — compute locally on the post-attention state} \\
-& x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
-\end{aligned}
+\text{# Attention: collaboration step — pull from previous actors} \\\\
+z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\\\
+\text{# MLP: solo step — compute locally} \\\\
+x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
 $$
 
 

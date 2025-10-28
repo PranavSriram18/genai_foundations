@@ -29,7 +29,7 @@ markdown_extensions:
   - md_in_html
   - toc:
       permalink: true
-  - pymdownx.arithmatex:   # MathJax
+  - pymdownx.arithmatex:
       generic: true
   - pymdownx.superfences
   - pymdownx.details
@@ -38,6 +38,7 @@ markdown_extensions:
   - pymdownx.snippets
 
 extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 extra_css:

@@ -20,9 +20,10 @@
     .idea  { color: #c7f9cc;  }   /* lighter green */
 }
 
-mjx-container[jax="CHTML"][display="true"] {
+mjx-container[display="true"] {
     text-align: left !important;
-    margin: 0.5em 0 !important;
+    white-space: pre !important;
   }
+  
   
   
