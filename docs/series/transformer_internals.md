@@ -109,11 +109,11 @@ through the model.
 Given a sequence of input tokens $w_1, \ldots, w_T$, focus on how a single token $w_t$ flows through
 its residual stream. 
 
-1. The token enters its stream as the sum of its word <span class="term">**embedding vector**</span>$e_t$ and
+1. The token enters its stream as the sum of its word <span class="term">**embedding vector**</span> $e_t$ and
    <span class="term">**positional embedding**</span> $p_t$. 
 
-2. Each layer computes an update that is <span class="idea">added</span> to the stream - hence the term
-   <span class="idea">residual</span>. The token's representation evolves through a sequence of intermediate states
+2. Each layer computes an update that is added to the stream - hence the term
+   <span class="term">residual</span>. The token's representation evolves through a sequence of intermediate states
    $x_{t,0}, x_{t,1}, \ldots, x_{t,L}$.
 
 3. At the final layer, the representation is multiplied by the <span class="term">unembedding matrix</span> to produce <span class="term">logits</span>
@@ -253,7 +253,7 @@ composed of multiple attention layers.
 ## 5. Computational Complexity of Attention
 ### 5.1 Complexity Derivation
 Consider generating a sequence of $T$ tokens. The actor at node $t$ must compute attention over all
-nodes $u \le t$. Each node $t$ involves:
+nodes $u \le t$, which involves:
 
 * Computing query, key, and value given residual stream state: $\mathcal{O}(D^2)$ (matrix-vector multiplication with $D \times D$ weight matrices)
 * Computing $t$ dot products between query and keys: $\mathcal{O}(tD)$  
@@ -361,7 +361,7 @@ Anthropic has found empirically that some heads perform a sort of "memory manage
 
 ---
 
-## 7. The Combinatorics of Attention-Based Information Flows
+## 7. The Combinatorics of Transformers' Information Flows
 
 Coming back to the information flow graph, we now ask an interesting question: in how many ways
 can information propagate across a context window? More precisely, how many paths are there from
@@ -490,7 +490,7 @@ is typically used in conjunction with ordinary attention (e.g. alternating layer
 as opposed to fully replacing it.
 
 It turns out we can do better: methods such as <span class="term">dilated attention</span> and
-<span class="term">logarithmic attention</idea> achieve exponentially growing receptive fields.
+<span class="term">logarithmic attention</span> achieve exponentially growing receptive fields.
 Below we present logarithmic attention; the intuition for dilated attention is fairly similar.
 
 ### 8.3 Logarithmic Attention
@@ -522,7 +522,7 @@ hops of sizes 1, 2, and 4 in any order.
 ### 8.4 Stochastic Masking
 So far we've focused on deterministic constructions of the neighborhood. In stochastic masking, we
 instead use a random subset:
-$N(t, l)$ is a random subset of size $w$ drawn from ${(1, l), \ldots, (t, l)}$.
+$N(t, l)$ is a random subset of size $w$ drawn from $\{ (1, l), \ldots, (t, l) \}$.
 
 As before, the time complexity is $\mathcal{O}(TD^2 + TDw)$. Now, why would we expect randomly chosen
 neighborhoods to yield good connectivity patterns? While a deep dive on this is beyond the scope of
@@ -580,7 +580,7 @@ key frames that illuminate both design and mechanism:
 * The grid graph as a substrate for information flow
 * Residual streams as fixed-bandwidth information highways
 * Attention as an interface for cross-stream communication
-* QK and OV circuits as composable primitives for implementing complex information movement
+* QK and OV circuits as edge-disjoint subgraphs, and as composable primitives for complex information movement patterns
 * Attention heads as low-rank, additive writers into subspaces, capable of both independent and composite behavior
 * Static sparse attention variants as connectivity-preserving graph sparsification
 
@@ -605,9 +605,7 @@ original nodes broadcast to and receive from. The resulting structure is a <span
 the graph lens and related sparsity theme extend to emerging ideas for improving or replacing MLPs,
 from MoEs to sparse memory layers. For instance, Meta's recent [paper](https://arxiv.org/pdf/2510.15103)
 replaces dense MLPs with sparse, selectively updateable memory, a promising step towards the
-longstanding challenge of continual learning. On a personal note, I am a big fan of sparsity due to
-its deep mathematical underpinnings, potential for algorithmic efficiency, and connections to
-biological intelligence. I believe sparsity research will play a significant role in AI
+longstanding challenge of continual learning. On a personal note, I'm deeply interested in sparsity due to its potential for algorithmic efficiency, connections to biological intelligence, and deep mathematical underpinnings. I believe sparsity research will play a significant role in AI
 breakthroughs over the coming years.
 
 The core takeaway we hope to leave readers with is: reasoning about transformers through a graph
