@@ -209,21 +209,16 @@ These questions correspond directly to the roles played by keys, queries, and va
 In pseudocode:
 
 $$
-\begin{alignedat}{2}
-&\texttt{\# score each key by dotting with the query} \\
-&\texttt{for } u \texttt{ in range}(1, t{+}1)\texttt{:} \\
-&\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\
-\\
-&\texttt{\# normalize via softmax} \\
-&\texttt{for } u \le t\texttt{:} \\
-&\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\
-\\
-&\texttt{\# weighted average of values} \\
-& h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\
-\\
-&\texttt{\# project and add to residual stream} \\
-& z_{t,l} = x_{t,l} + W_O h_t
-\end{alignedat}
+\text{# score each key by dotting with the query} \\\\
+\text{for } u \text{ in range}(1, t{+}1)\text{:} \\\\
+\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\\\[6pt]
+\text{# normalize via softmax} \\\\
+\text{for } u \le t\text{:} \\\\
+\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\\\[6pt]
+\text{# weighted average of values} \\\\
+h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\\\[6pt]
+\text{# project and add to residual stream} \\\\
+z_{t,l} = x_{t,l} + W_O h_t
 $$
 
 
@@ -310,11 +305,10 @@ being added to the residual stream.
 In pseudocode:
 
 $$
-\text{# concat-then-project formulation} \\
-\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\
-\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\
-\\
-h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\
+\text{# concat-then-project formulation} \\\\
+\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\\\
+\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\\\
+h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\\\
 z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
 $$
 
@@ -324,10 +318,11 @@ A key linear-algebraic observation is: concatenation followed by linear projecti
 to summing linear projections applied to the individual slices.
 
 $$
-&\texttt{\# equivalent independent-adds formulation} \\
-&\texttt{\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
-& z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
+\text{# equivalent independent-adds formulation} \\\\
+\text{# } W_O^h \text{ is the slice of } W_O \text{ corresponding to head } h \\\\
+z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
 $$
+
 
 
 
