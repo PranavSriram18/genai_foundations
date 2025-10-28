@@ -256,8 +256,8 @@ becomes a linear function of its inputs.
 ### 5.1 Complexity Derivation
 Consider generating a sequence of $T$ tokens. The actor at node $t$ must compute attention over all
 nodes $u \le t$. Each node $t$ involves:
-* Computing query, key, and value given residual stream state: $\mathcal{O}(D^2)$ (matrix-vector multiplication
-  with $D \times D$ weight matrices)
+
+* Computing query, key, and value given residual stream state: $\mathcal{O}(D^2)$ (matrix-vector multiplication with $D \times D$ weight matrices)
 * Computing $t$ dot products between query and keys: $\mathcal{O}(tD)$  
 * Weighted sum of $t$ value vectors: $\mathcal{O}(tD)$
 
@@ -276,7 +276,7 @@ to the index of its node in the sequence. The average workload grows linearly wi
 and we have $T$ actors, yielding $\mathcal{O}(T^2D)$ total complexity.
 
 As a first approximation, this $\mathcal{O}(T^2D)$ complexity is the central bottleneck in scaling
-transformers to long contexts, and much of the attention variant literation aims to attack this
+transformers to long contexts, and much of the attention variant literature aims to attack this
 term. (We'll discuss some nuances to this picture shortly.)
 
 An important thing to note is that both the QK and OV circuits contribute to this quadratic cost:
@@ -296,18 +296,20 @@ attention is highly parallel, so actual wall-clock time differs significantly fr
 An interesting lens for thinking about complexity in a world of increasing compute is: what is the complexity of an algorithm in the limit of infinite parallel compute? For a fascinating deep dive on this, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
 
 Finally, as a personal aside, a pet peeve of mine is when the complexity of attention is written as
-as $\mathcal{O}(T^2)$, silently treating the embedding dimension as a constant. This is problematic for two
-reasons. First, the embedding dimension is in the thousands for frontier models, so it's not exactly
-a small constant. Second, a sparse attention algorithm that actually addressed the $D$ term and reduced complexity to say, $\mathcal{O}(T^2 \log D)$, could still represent a meaningful advance despite still being quadratic in $T$.
+$\mathcal{O}(T^2)$, silently treating the embedding dimension as a constant. This is problematic for
+two reasons. First, the embedding dimension is in the thousands for frontier models, so it's not
+exactly a small constant. Second, a sparse attention algorithm that actually addressed the $D$ term
+and reduced complexity to say, $\mathcal{O}(T^2 \log D)$, could still represent a meaningful advance
+despite still being quadratic in $T$.
 
 ---
 
 ## 6. Attention Heads: Work-Partitioning and Low-Rank Updates
 
-The standard framing of multi-head attention is about <span class="idea">work-partitioning</span>: keys, queries, and
-values are sliced along the embedding dimension, heads perform attention independently on their
-slices, the results are concatenated and then projected using $W_O$ before being added to the residual
-stream.
+The standard framing of multi-head attention is about <span class="idea">work-partitioning</span>:
+keys, queries, and values are sliced along the embedding dimension, heads perform attention
+independently on their slices, the results are concatenated and then projected using $W_O$ before
+being added to the residual stream.
 
 **In pseudocode:**
 
@@ -422,9 +424,11 @@ unifies several efficient attention variants.
 
 ### 8.1 Terminology
 <span class="term">Neighborhoods</span>
+
 Define $N(t, l)$ as the <span class="term">attention neighborhood</span> of node $(t, l)$: that is, the set of nodes that the
 actor at $(t, l)$ can attend to. The actor at $(t, l)$ computes attention only over nodes in
-$N(t, l)$, ignoring all others. In ordinary attention, we have $N(t, l) = \\{(1, l), (2, l), \ldots, (t, l)\\}$, i.e. all previous nodes in the current layer. 
+$N(t, l)$, ignoring all others. In ordinary attention, we have $N(t, l) = \textbraceleft (1, l), (2, l), \ldots, (t, l) \textbraceright$, i.e. all previous nodes in the current layer.
+
 
 We'll see that a large number of efficient attention mechanisms boil down to simply defining $N(t, l)$
 in different ways. In particular, these mechanisms <span class="idea">shrink</span> the neighborhood to some subset of the full ordinary neighborhood. Why does this help? We have the following
@@ -499,7 +503,7 @@ fairly similar.
 ### 8.3 Logarithmic Attention
 Instead of looking at just the most recent nodes, consider what happens if we use an exponentially increasing jump size within a layer:
 
-$N(t, l) = \\{(t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k)\\}$,
+$N(t, l) = \textbraceleft (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \textbraceright$,
 where $k = \lfloor \log_{2}(t) \rfloor$. 
 
 
