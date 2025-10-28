@@ -19,4 +19,10 @@
     .term  { color: #4dd0e1; }   /* lighter cyan */
     .idea  { color: #c7f9cc;  }   /* lighter green */
 }
+
+/* Left-align all display math blocks (e.g., $$ ... $$) */
+mjx-container[jax="CHTML"][display="true"] {
+    text-align: left !important;
+    margin: 0.5em 0 !important;
+  }
   
