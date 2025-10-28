@@ -226,6 +226,8 @@ $$
 (Note that this pseudocode is pedagogical; in practice, these computations are implemented in
 parallel.)
 
+![QK Image](../img/post0/qk.svg)
+
 ### 4.2 Takeaways for Interpretability
 Below are a few important implications of the attention mechanism on how information flows through
 a transformer model. 
@@ -523,10 +525,10 @@ The table below summarizes the static sparsification methods we've discussed. (R
 | Technique | Neighborhood Size | Complexity | RF Growth | Full RF Depth |
 |-----------|------------------|------------|-----------|---------------|
 | Ordinary Attention | $t$ | $O(T^2D)$ | Immediate | 1 |
-| Sliding Window | $w$ | $O(TDw)$ | Linear | $T/w$ |
-| Logarithmic | $\log_{2}(t)$ | $O(TD \log T)$ | Exponential | $\log_{2}(T)$ |
-| Dilated | $w$ | $O(TDw)$ | Exponential | $\log_{w}T$ |
-| Stochastic | $w$ | $O(TDw)$ | Exponential (w.h.p.) | $\log_{w}T$ (w.h.p.) |
+| Sliding Window | $w$ | $O(TD^2 + TDw)$ | Linear | $T/w$ |
+| Logarithmic | $\log_{2}(t)$ | $O(TD^2 + TD \log T)$ | Exponential | $\log_{2}(T)$ |
+| Dilated | $w$ | $O(TD^2 + TDw)$ | Exponential | $\log_{w}T$ |
+| Stochastic | $w$ | $O(TD^2 + TDw)$ | Exponential (w.h.p.) | $\log_{w}T$ (w.h.p.) |
 
 ### 8.7 Weaknesses of Static Sparsification
 Interestingly, despite the theoretical advantages of logarithmic attention, dilated attention, and
