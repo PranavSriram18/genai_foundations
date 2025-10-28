@@ -53,10 +53,10 @@ is to provide a gentler onramp to some of the deep technical insights expounded 
 **Caveats**
 
 Our emphasis is on building intuition rather than mathematical rigor or implementation details. To this end, we take the following liberties:
-- Omit architectural and implementation details that don't change the core story (like
-normalizers, regularizers, numerical issues, etc.)
-- Liberally anthropomorphize (introducing "actors" that "want" information, etc.)
-- Depict parallel computations as serial when it aids understanding.
+
+* Omit architectural and implementation details that don't change the core story (like normalizers, regularizers, numerical issues, etc.)
+* Liberally anthropomorphize (introducing "actors" that "want" information, etc.)
+* Depict parallel computations as serial when it aids understanding.
 
 **Notation**
 
@@ -128,28 +128,34 @@ Let's now unpack what happens inside a layer. A metaphor we'll introduce is to i
 associated with each residual stream within a layer, which we'll call a "residual actor." We'll imagine each actor as responsible for implementing the layer update for its stream.  
 
 We can frame the two core operations within a layer as follows:
+
 * Attention as <span class="idea">*communication*</span> - specifically, actors pulling information from previous actors.
 
-* MLP as solo computation - actors individually performing computation on their own post-attention
-  state.
+* MLP as solo computation - actors individually performing computation on their own post-attention state.
 
-```math
-\begin{aligned}
-&\texttt{# Attention: collaboration step - pull from previous actors at the same layer} \\
+
+$$
+\begin{equation*}
+\hspace{0pt}
+\begin{alignedat}{2}
+&\texttt{\\# Attention: collaboration step — pull from previous actors at the same layer} \\
 & z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
 \\
-&\texttt{# MLP: solo step - compute locally on the post-attention state} \\
+&\texttt{\\# MLP: solo step — compute locally on the post-attention state} \\
 & x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
-\end{aligned}
-```
+\end{alignedat}
+\end{equation*}
+$$
 
-With this framing, a single layer is implemented by multiple *collaborating actors*, using attention
-as the <span class="idea">interface</span> for communication.
+
+With this framing, a single layer is implemented by multiple <span class="idea">collaborating actors</span>,
+using attention as the <span class="idea">interface</span> for communication.
 
 ### 3.4 Collaborating Actors and Goals
 Continuing with the actor metaphor, we ask: what are the goals of each actor? Well, at the end of
-the $t$-th residual stream, the model needs to predict the $t+1$-th token $w_{t+1}$. So, the *immediate goal* of actor $t$ is to evolve the representation $x_{t, l}$ towards a representation predictive of the next token. But because *future actors* can also read from actor $t$, it also has a secondary
-goal: compute information useful for those future actors.
+the $t$-th residual stream, the model needs to predict the $t+1$-th token $w_{t+1}$. So, the
+<span class="idea">immediate goal</span> of actor $t$ is to evolve the representation $x_{t, l}$ towards a representation predictive of the next token. But because <span class="idea">future actors</span> can also read from actor $t$,
+it also has a secondary goal: compute information useful for those future actors.
 
 This framing provides a first-principles view of how models trained for next-token prediction can
 actually plan ahead, a phenomenon verified empirically in [work by Anthropic](https://www.anthropic.com/research/tracing-thoughts-language-model).
@@ -205,22 +211,26 @@ These questions correspond directly to the roles played by keys, queries, and va
 In pseudocode:
 
 $$
-\begin{aligned}
-&\texttt{\# score each key by dotting with the query} \\
+\begin{equation*}
+\hspace{0pt}
+\begin{alignedat}{2}
+&\texttt{\\# score each key by dotting with the query} \\
 &\texttt{for } u \texttt{ in range}(1, t{+}1)\texttt{:} \\
 &\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\
 \\
-&\texttt{\# normalize via softmax} \\
+&\texttt{\\# normalize via softmax} \\
 &\texttt{for } u \le t\texttt{:} \\
 &\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\
 \\
-&\texttt{\# weighted average of values} \\
+&\texttt{\\# weighted average of values} \\
 & h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\
 \\
-&\texttt{\# project and add to residual stream} \\
+&\texttt{\\# project and add to residual stream} \\
 & z_{t,l} = x_{t,l} + W_O h_t
-\end{aligned}
+\end{alignedat}
+\end{equation*}
 $$
+
 
 
 (Note that this pseudocode is pedagogical; in practice, these computations are implemented in
@@ -266,10 +276,13 @@ to the index of its node in the sequence. The average workload grows linearly wi
 and we have $T$ actors, yielding $\mathcal{O}(T^2D)$ total complexity.
 
 As a first approximation, this $\mathcal{O}(T^2D)$ complexity is the central bottleneck in scaling
-transformers to long contexts, though as we'll see shortly, there is some nuance to this picture.
-Much of the attention variant literature aims to attack this $\mathcal{O}(T^2D)$ term. 
+transformers to long contexts, and much of the attention variant literation aims to attack this
+term. (We'll discuss some nuances to this picture shortly.)
 
-An important thing to note is that both the QK and OV circuits contribute to this quadratic cost: each stream’s linear work stems from two sources: scoring all previous keys (QK circuit) and summing all corresponding values (OV circuit). Thus, <span class="idea">any attempt to break the quadratic barrier must address both QK and OV circuits</span>. 
+An important thing to note is that both the QK and OV circuits contribute to this quadratic cost:
+each stream’s linear work stems from two sources: scoring all previous keys (QK circuit) and summing
+all corresponding values (OV circuit). Thus, <span class="idea">any attempt to break the quadratic
+barrier must address both QK and OV circuits</span>. 
 
 ### 5.2 Aside: Nuances on Complexity
 
@@ -299,25 +312,31 @@ stream.
 **In pseudocode:**
 
 $$
-\begin{aligned}
-&\texttt{\# concat-then-project formulation} \\
-&\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
-&\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+\begin{equation*}
+\hspace{0pt}
+\begin{alignedat}{2}
+&\texttt{\\# concat-then-project formulation} \\
+&\texttt{\\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
+&\texttt{\\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
 \\
-& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
-& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
-\end{aligned}
+& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\\# concatenate head outputs} \\
+& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\\# project and add to residual stream}
+\end{alignedat}
+\end{equation*}
 $$
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
 
 $$
-\begin{aligned}
-&\texttt{\# equivalent independent-adds formulation} \\
-&\texttt{\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
+\begin{equation*}
+\hspace{0pt}
+\begin{alignedat}{2}
+&\texttt{\\# equivalent independent-adds formulation} \\
+&\texttt{\\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
 & z_{t,l} = x_{t,l} + \sum_h (W_O^h h_t^h)
-\end{aligned}
+\end{alignedat}
+\end{equation*}
 $$
 
 
@@ -332,16 +351,19 @@ composing into sophisticated circuits. [Induction heads](https://transformer-cir
 head composition across layers in action.
 
 <span class="idea">Low-rank, subspace-targeted writes:</span> a head can only modify the residual 
-within the column space of $W_O^h$ - at most rank $d_h$. Heads are hence low-rank writers into subspaces of the shared stream.
+within the column space of $W_O^h$ - at most rank $d_h$. Heads are hence low-rank writers into
+subspaces of the shared stream.
 
-<span class="idea">Potentially limited interaction between heads:</span> if two heads write largely into disjoint or orthogonal subspaces, later computation may treat their
-contributions as independent. Overlap enables constructive or destructive interference. The geometry
-of $W_O$ therefore partitions bandwidth and mediates the extent to which separate heads interact.
+<span class="idea">Potentially limited interaction between heads:</span> if two heads write largely
+into orthogonal subspaces, later computation may treat their contributions as independent. Overlap
+enables constructive or destructive interference. The geometry of $W_O$ therefore partitions
+bandwidth and mediates the extent to which separate heads interact.
 
-<span class="idea">Implicit memory management:</span> updates are additive and persistent. Information written by a head persists unless future layers
-actively overwrite or counter-write it. Since bandwidth is finite (dimension $D$), writing one thing
-necessarily crowds others. Research by Anthropic has found empirically that some heads perform a
-sort of "memory management" role, actively "deleting previous writes" that are no longer needed.
+<span class="idea">Implicit memory management:</span> updates are additive and persistent.
+Information written by a head persists unless future layers actively overwrite or counter-write it.
+Since bandwidth is finite (dimension $D$), writing one thing necessarily crowds others. Research by
+Anthropic has found empirically that some heads perform a sort of "memory management" role, actively
+"deleting previous writes" that are no longer needed.
 
 ---
 
@@ -357,8 +379,8 @@ Recall that information moves through the graph by alternating between two types
 
 <span class="term">Vertical moves</span> (residual): $(t, l) \to (t, l+1)$
 
-Let's look at a simple case. In how many ways can we travel from the first stream in one layer to the
-last stream in the next layer, i.e. from $(1, l)$ to $(T, l+1)$?
+Let's look at a simple case. In how many ways can we travel from the first stream in one layer to
+the last stream in the next layer, i.e. from $(1, l)$ to $(T, l+1)$?
 
 ![Combinatorics Figure](../img/post0/combinatorics-figure.svg)
 
@@ -373,8 +395,9 @@ information from the first stream can take to reach the last stream.
 
 More generally, any path from $(t, l)$ to $(t + p, l + q)$ requires $q$ vertical moves and a total
 horizontal displacement of $p$. The number of ways to arrange these moves is the binomial
-coefficient $\binom{p+q}{p}$. By [Stirling's approximation](https://en.wikipedia.org/wiki/Stirling%27s_approximation), this grows exponentially with $p + q$. Hence, as we
-scale context length and depth, the number of information pathways quickly becomes astronomical.
+coefficient $\binom{p+q}{p}$. By [Stirling's approximation](https://en.wikipedia.org/wiki/Stirling%27s_approximation),
+this grows exponentially with $p + q$. Hence, as we scale context length and depth, the number of
+information pathways quickly becomes astronomical.
 
 This combinatorial explosion suggests possible redundancy: with so many paths available, could we 
 remove some edges without destroying connectivity? This intuition forms the basis for an entire
@@ -390,7 +413,8 @@ We've framed Transformers as defining information flow through a grid graph, whe
 enable communication between streams. In Section 7, we observed that the number of paths in this
 graph from an input token to another node grows exponentially, prompting the following question: 
 do we really need every attention edge? Can we instead prune most edges while still maintaining 
-good connectivity - that is, ensuring information can still flow from any stream to any other stream within reasonable depth?
+good connectivity - that is, ensuring information can still flow from any stream to any other stream
+within reasonable depth?
 
 This section explores exactly this idea. We'll start by introducing some terminology to make these
 notions precise, and then show how the frame of <span class="term">static graph sparsification</span> 
@@ -406,11 +430,12 @@ We'll see that a large number of efficient attention mechanisms boil down to sim
 in different ways. In particular, these mechanisms <span class="idea">shrink</span> the neighborhood to some subset of the full ordinary neighborhood. Why does this help? We have the following
 observation:
 
-Observation: if we fix neighborhood size to some constant $w$, the time complexity of generating $T$ tokens is $\mathcal{O}(TD^2 + TDw) = \mathcal{O}(TDw)$, assuming the second term still dominates. This is a 
-factor of $T/w$ saving over ordinary attention.
+Observation: if we fix neighborhood size to some constant $w$, the time complexity of generating $T$
+tokens is $\mathcal{O}(TD^2 + TDw) = \mathcal{O}(TDw)$, assuming the second term still dominates.
+This is a factor of $T/w$ saving over ordinary attention.
 
-The reasoning mirrors Section 5: both the query-key scoring and value-aggregation steps now cost
-$\mathcal{O}(wD)$ per token instead of $\mathcal{O}(tD)$.
+The reasoning mirrors that in Section 5: both the query-key scoring and value-aggregation steps now
+cost $\mathcal{O}(wD)$ per token instead of $\mathcal{O}(tD)$.
 
 <span class="term">Static vs Dynamic Sparsification</span>
 
@@ -433,11 +458,15 @@ neighborhoods yield lower attention cost, but also lower receptive field.
 
 
 ### 8.2 Sliding Window Attention
-In Sliding Window Attention, each actor attends only to its $w$ most recent neighbors. In symbols,
+In Sliding Window Attention, each actor attends only to its $w$ most recent neighbors. In symbols:
 
-```math
-N(t, l) = \{(\max(1, t-w+1), l), \ldots, (t, l)\}
-```
+$$
+\begin{equation*}
+\hspace{0pt}
+N(t, l) = \\{ (\max(1,\, t - w + 1),\, l),\, \ldots,\, (t,\, l) \\}
+\end{equation*}
+$$
+
 
 
 
@@ -452,9 +481,9 @@ will be $\mathcal{O}(TD^2 + DTw)$
 **Receptive Field**
 
 Consider node $(t, 0)$. It can only see the $w$ most recent tokens, i.e. tokens $t, t-1, \ldots, t-w+1$. If we go up a layer, the receptive field increases by $w-1$: $(t, 1)$ can see back up to $(t-w+1, 1)$, which in turn can see up to $(t-2*w+2, 0)$. Continuing in this manner, at each layer,
-the receptive field extends by an additional $w-1$ positions, giving **linear growth with depth**:
-the size of the receptive field of $(t, l)$ is $\mathcal{O}(lw)$. Put another way, we need $O(T/w)
-$ layers to ensure the last stream receives information from the first token.
+the receptive field extends by an additional $w-1$ positions, giving <span class="idea">linear growth with depth</span>:
+the size of the receptive field of $(t, l)$ is $\mathcal{O}(lw)$. Put another way, we need $O(T/w)$
+layers to ensure the last stream receives information from the first token.
 
 Sliding window attention thus gives us about a $T/w$ complexity saving over ordinary attention, 
 but at the cost of needing about $T/w$ layers for information to propagate over the entire 
@@ -469,7 +498,8 @@ fairly similar.
 
 ### 8.3 Logarithmic Attention
 Instead of looking at just the most recent nodes, consider what happens if we use an exponentially increasing jump size within a layer:
-$N(t, l) = {(t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k)}$,
+
+$N(t, l) = \\{(t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k)\\}$,
 where $k = \lfloor \log_{2}(t) \rfloor$. 
 
 
