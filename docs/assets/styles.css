@@ -7,16 +7,16 @@
     font-weight: 700;
 }
   
-/* Green italics for novel ideas or insights */
+/* Pastel green italics for novel ideas or insights */
 .idea {
-    color: #43a047;          /* material green-600 */
+    color: #b5e48c; 
     font-style: italic;
     font-weight: 500;
 }
   
-/* Optional: automatic dark-mode adjustments */
+/* dark-mode adjustments */
 @media (prefers-color-scheme: dark) {
     .term  { color: #4dd0e1; }   /* lighter cyan */
-    .idea  { color: #81c784; }   /* lighter green */
+    .idea  { color: #c7f9cc;  }   /* lighter green */
 }
   

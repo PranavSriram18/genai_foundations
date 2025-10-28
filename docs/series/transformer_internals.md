@@ -1,4 +1,4 @@
-# Information Flow Graphs: A Unifying Lens for Transformers and Efficient Attention
+# Understanding Transformer Internals: An Information Flow Graph Lens
 
 ## 1. Introduction
 
@@ -11,6 +11,8 @@ these fields, and deepen readers' intuition on Transformer internals and attenti
 In particular, our (perhaps ambitious) thesis is: despite the diversity of
 ideas in this space, <span class="idea">a handful of mental models
 and metaphors is sufficient to understand the research frontier</span>.
+
+
 
 ![Lead Image](../img/post0/lead-image.svg)
 
@@ -202,23 +204,24 @@ These questions correspond directly to the roles played by keys, queries, and va
 
 In pseudocode:
 
-```math
+$$
 \begin{aligned}
-&\texttt{# scores each key by taking a dot product with our query} \\
-&\texttt{for u in range(1, t+1):} \\
-&\quad score_{t,u} = q_t^{\mathrm{T}} k_u \\
+&\texttt{\# score each key by dotting with the query} \\
+&\texttt{for } u \texttt{ in range}(1, t{+}1)\texttt{:} \\
+&\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\
 \\
-&\texttt{# normalize the scores to sum to 1 via softmax} \\
-&\texttt{for u in range(1, t+1):} \\
-&\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) / \sum_{j\le t} \exp(\mathrm{score}_{t,j}) \\
+&\texttt{\# normalize via softmax} \\
+&\texttt{for } u \le t\texttt{:} \\
+&\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\
 \\
-&\texttt{# create a weighted average of values based on attention scores} \\
-& h_t = \sum_{u\le t} a_{t,u} \cdot v_u \\
+&\texttt{\# weighted average of values} \\
+& h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\
 \\
-&\texttt{# multiply by another matrix W_O before adding to the residual stream} \\
+&\texttt{\# project and add to residual stream} \\
 & z_{t,l} = x_{t,l} + W_O h_t
 \end{aligned}
-```
+$$
+
 
 (Note that this pseudocode is pedagogical; in practice, these computations are implemented in
 parallel.)
@@ -291,29 +294,30 @@ values are sliced along the embedding dimension, heads perform attention indepen
 slices, the results are concatenated and then projected using $W_O$ before being added to the residual
 stream.
 
-In pseudocode:
+**In pseudocode:**
 
-```math
+$$
 \begin{aligned}
-&\texttt{# concat-then-project formulation} \\
-&\texttt{# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
-&\texttt{# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+&\texttt{\# concat-then-project formulation} \\
+&\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
+&\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
 \\
-& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{# concatenate head outputs} \\
-& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{# project and add to residual stream}
+& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
+& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
 \end{aligned}
-```
+$$
 
-A key linear-algebraic observation is: concatenation followed by linear projection is equivalent
-to summing linear projections applied to the individual slices. 
+A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
+to summing linear projections applied to the individual slices.
 
-```math
+$$
 \begin{aligned}
-&\texttt{# equivalent independent-adds formulation} \\
-&\texttt{# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
+&\texttt{\# equivalent independent-adds formulation} \\
+&\texttt{\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
 & z_{t,l} = x_{t,l} + \sum_h (W_O^h h_t^h)
 \end{aligned}
-```
+$$
+
 
 With the latter formulation, we see that each head writes <span class="idea">independently and
 additively</span> into the residual stream through its own projection slice $W_O^h$.
