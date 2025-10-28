@@ -417,7 +417,7 @@ unifies several efficient attention variants.
 
 Define $N(t, l)$ as the <span class="term">attention neighborhood</span> of node $(t, l)$: that is, the set of nodes that the
 actor at $(t, l)$ can attend to. The actor at $(t, l)$ computes attention only over nodes in
-$N(t, l)$, ignoring all others. In ordinary attention, we have $N(t, l) = \textbraceleft (1, l), (2, l), \ldots, (t, l) \textbraceright$, i.e. all previous nodes in the current layer.
+$N(t, l)$, ignoring all others. In ordinary attention, we have $N(t, l) = \{ (1, l), (2, l), \ldots, (t, l) \}$, i.e. all previous nodes in the current layer.
 
 
 We'll see that a large number of efficient attention mechanisms boil down to simply defining $N(t, l)$
@@ -447,7 +447,7 @@ Let's also make the notion of "preserving information flow" more concrete. We'll
 tokens that this node can "see" through the network. More formally, it is the set of indices $i$ such that there exists a path in the information flow graph from node $(i, 0)$ to node $(t, l)$.
 
 In ordinary attention, the node $(t, l)$ can "see" all tokens from 1 through $t$, 
-because it receives information from all previous streams, so the receptive field is the full set $\{1, \ldots, t\}$. As we shrink neighborhoods, we will also shrink the receptive fields of some tokens. Thus, there is a tradeoff between neighborhood size and receptive field: smaller
+because it receives information from all previous streams, so the receptive field is the full set $\\{1, \ldots, t\\}$. As we shrink neighborhoods, we will also shrink the receptive fields of some tokens. Thus, there is a tradeoff between neighborhood size and receptive field: smaller
 neighborhoods yield lower attention cost, but also lower receptive field. 
 
 
