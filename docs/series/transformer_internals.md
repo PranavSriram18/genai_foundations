@@ -310,24 +310,23 @@ being added to the residual stream.
 In pseudocode:
 
 $$
-\texttt{\# concat-then-project formulation} \\
-\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
-\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+\text{# concat-then-project formulation} \\
+\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\
+\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\
 \\
-h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
-z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
+h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\
+z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
 $$
+
 
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
 
 $$
-\begin{alignedat}{2}
 &\texttt{\# equivalent independent-adds formulation} \\
 &\texttt{\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
 & z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
-\end{alignedat}
 $$
 
 
