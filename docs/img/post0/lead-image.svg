@@ -1,0 +1,220 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1600" height="900" fill="#1a1a1a"/>
+  
+  <!-- Define arrow markers -->
+  <defs>
+    <!-- Blue arrow for residual updates -->
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a9eff" />
+    </marker>
+    
+    <!-- Red arrow for attention -->
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ff6b6b" />
+    </marker>
+    
+    <!-- Yellow arrow for highlighted path -->
+    <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ffd700" />
+    </marker>
+  </defs>
+  
+  <!-- Grid positions: 8 tokens, 4 layers (l=0 to l=2, plus logits) -->
+  <!-- x positions: 200, 320, 440, 560, 680, 800, 920, 1040 -->
+  <!-- y positions: 650, 450, 250, 80 (bottom to top, 80 for logits) -->
+  
+  <!-- ANNOTATION BOXES (behind everything) -->
+  
+  <!-- Layer annotation (row) - moved up slightly -->
+  <rect x="180" y="625" width="880" height="60" fill="none" stroke="#7b68ee" stroke-width="3" stroke-dasharray="8,4" rx="8"/>
+  <text x="1070" y="660" fill="#9370db" font-size="20" font-family="Arial, sans-serif" font-weight="600">Layer</text>
+  <text x="1070" y="680" fill="#9370db" font-size="14" font-family="Arial, sans-serif" font-style="italic">(parallel actors)</text>
+  
+  <!-- Residual stream annotation (column) -->
+  <rect x="660" y="60" width="60" height="610" fill="none" stroke="#2ecc71" stroke-width="3" stroke-dasharray="8,4" rx="8"/>
+  <text x="730" y="30" fill="#2ecc71" font-size="20" font-family="Arial, sans-serif" font-weight="600">Residual Stream</text>
+  <text x="730" y="50" fill="#2ecc71" font-size="14" font-family="Arial, sans-serif" font-style="italic">(fixed bandwidth D)</text>
+  
+  <!-- Attention neighborhood annotation for node (4,1): positions 2,3,4 -->
+  <ellipse cx="427" cy="450" rx="175" ry="50" fill="none" stroke="#ffa500" stroke-width="3" stroke-dasharray="4,4" opacity="0.7"/>
+  
+  <!-- VERTICAL EDGES (Residual Updates) - golden path highlighted -->
+  <!-- Token 1 -->
+  <line x1="200" y1="650" x2="200" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="200" y1="450" x2="200" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="200" y1="250" x2="200" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 2 - GOLDEN from l=0 to l=1 -->
+  <line x1="320" y1="650" x2="320" y2="450" stroke="#ffd700" stroke-width="4" marker-end="url(#arrowYellow)" stroke-dasharray="8,4"/>
+  <line x1="320" y1="450" x2="320" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="320" y1="250" x2="320" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 3 -->
+  <line x1="440" y1="650" x2="440" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="440" y1="450" x2="440" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="440" y1="250" x2="440" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 4 - GOLDEN from l=1 to l=2 -->
+  <line x1="560" y1="650" x2="560" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="560" y1="450" x2="560" y2="250" stroke="#ffd700" stroke-width="4" marker-end="url(#arrowYellow)" stroke-dasharray="8,4"/>
+  <line x1="560" y1="250" x2="560" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 5 -->
+  <line x1="680" y1="650" x2="680" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="680" y1="450" x2="680" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="680" y1="250" x2="680" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 6 -->
+  <line x1="800" y1="650" x2="800" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="800" y1="450" x2="800" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="800" y1="250" x2="800" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 7 -->
+  <line x1="920" y1="650" x2="920" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="920" y1="450" x2="920" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="920" y1="250" x2="920" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 8 -->
+  <line x1="1040" y1="650" x2="1040" y2="450" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="1040" y1="450" x2="1040" y2="250" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="1040" y1="250" x2="1040" y2="80" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- HORIZONTAL EDGES (Logarithmic Attention) - golden path highlighted -->
+  
+  <!-- Layer l=0: Golden path (1,0) → (2,0), other edges in red -->
+  <line x1="200" y1="650" x2="320" y2="650" stroke="#ffd700" stroke-width="4" marker-end="url(#arrowYellow)"/>
+  <path d="M 200,650 Q 320,630 440,650" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <path d="M 200,650 Q 440,610 680,650" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <!-- Layer l=1: Golden path (2,1) → (4,1), other edges -->
+  <line x1="320" y1="450" x2="440" y2="450" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <path d="M 320,450 Q 440,430 560,450" stroke="#ffd700" stroke-width="4" fill="none" marker-end="url(#arrowYellow)"/>
+  <path d="M 320,450 Q 560,410 800,450" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <line x1="440" y1="450" x2="560" y2="450" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <path d="M 440,450 Q 560,470 680,450" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <path d="M 440,450 Q 680,490 920,450" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <line x1="680" y1="450" x2="800" y2="450" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <path d="M 680,450 Q 800,430 920,450" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <!-- Layer l=2: Golden path (4,2) → (8,2), other edges -->
+  <line x1="560" y1="250" x2="680" y2="250" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <path d="M 560,250 Q 680,230 800,250" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <path d="M 560,250 Q 800,210 1040,250" stroke="#ffd700" stroke-width="4" fill="none" marker-end="url(#arrowYellow)"/>
+  
+  <line x1="800" y1="250" x2="920" y2="250" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <path d="M 800,250 Q 920,270 1040,250" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <line x1="920" y1="250" x2="1040" y2="250" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  
+  <!-- NODES (circles for layers 0-2, squares for logits) -->
+  <!-- Layer l=0 -->
+  <circle cx="200" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="650" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=1 -->
+  <circle cx="200" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="450" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=2 -->
+  <circle cx="200" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="250" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Logit layer (squares) -->
+  <rect x="184" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="304" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="424" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="544" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="664" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="784" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="904" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  <rect x="1024" y="64" width="32" height="32" fill="#d4d4d4" stroke="#555" stroke-width="2" rx="4"/>
+  
+  <!-- LABELS -->
+  <!-- Layer labels (left side) -->
+  <text x="120" y="655" fill="#888" font-size="20" font-family="Arial, sans-serif">l=0</text>
+  <text x="120" y="455" fill="#888" font-size="20" font-family="Arial, sans-serif">l=1</text>
+  <text x="120" y="255" fill="#888" font-size="20" font-family="Arial, sans-serif">l=2</text>
+  
+  <!-- Logits label - in colored rectangle -->
+  <rect x="75" y="68" width="55" height="28" fill="#2a2a2a" stroke="#888" stroke-width="2" rx="4"/>
+  <text x="102" y="87" fill="#aaa" font-size="18" font-family="Arial, sans-serif" text-anchor="middle">logits</text>
+  
+  <!-- Token labels (bottom) -->
+  <text x="193" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₁</text>
+  <text x="313" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₂</text>
+  <text x="433" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₃</text>
+  <text x="553" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₄</text>
+  <text x="673" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₅</text>
+  <text x="793" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₆</text>
+  <text x="913" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₇</text>
+  <text x="1033" y="700" fill="#666" font-size="18" font-family="Arial, sans-serif">w₈</text>
+  
+  <!-- Axis labels -->
+  <text x="80" y="400" fill="#7a9ab5" font-size="22" font-family="Arial, sans-serif" transform="rotate(-90 80 400)" font-weight="600">Depth (Layers)</text>
+  <text x="520" y="765" fill="#888" font-size="22" font-family="Arial, sans-serif" font-weight="600">Time (Tokens) →</text>
+  <!-- Title - moved even higher to completely avoid green box -->
+  <text x="500" y="25" fill="#ddd" font-size="32" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Transformers as Information Flow Graphs</text>
+  
+  <!-- ANNOTATIONS -->
+  
+  <!-- Residual update annotation - positioned at lower right, near first upward arrow of rightmost stream -->
+  <g transform="translate(1070, 550)">
+    <line x1="0" y1="0" x2="-20" y2="0" stroke="#4a9eff" stroke-width="2" stroke-dasharray="4,2"/>
+    <rect x="5" y="-22" width="170" height="45" fill="#2a2a2a" stroke="#4a9eff" stroke-width="2" rx="6"/>
+    <text x="90" y="0" fill="#4a9eff" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Residual Update</text>
+    <text x="90" y="15" fill="#4a9eff" font-size="12" font-family="Arial, sans-serif" text-anchor="middle">(t, l) → (t, l+1)</text>
+  </g>
+  
+  <!-- Causal communication annotation - moved further left and up to avoid purple box and nodes -->
+  <g transform="translate(250, 580)">
+    <line x1="0" y1="0" x2="30" y2="40" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="4,2"/>
+    <rect x="-220" y="-50" width="215" height="40" fill="#2a2a2a" stroke="#ff6b6b" stroke-width="2" rx="6"/>
+    <text x="-112" y="-28" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Causal Communication</text>
+  </g>
+  
+  <!-- Right-side annotation boxes -->
+  
+  <!-- Information flow path -->
+  <g transform="translate(1100, 140)">
+    <rect x="0" y="0" width="280" height="70" fill="#2a2a2a" stroke="#ffd700" stroke-width="2" rx="6"/>
+    <text x="140" y="25" fill="#ffd700" font-size="17" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Information Flow Path</text>
+    <text x="140" y="43" fill="#ffd700" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">(1,0) → (2,0) → (2,1) →</text>
+    <text x="140" y="58" fill="#ffd700" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">(4,1) → (4,2) → (8,2)</text>
+  </g>
+  
+  <!-- Attention neighborhood -->
+  <g transform="translate(1100, 230)">
+    <rect x="0" y="0" width="280" height="60" fill="#2a2a2a" stroke="#ffa500" stroke-width="2" rx="6"/>
+    <text x="140" y="25" fill="#ffa500" font-size="17" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Attention Neighborhood</text>
+    <text x="140" y="45" fill="#ffa500" font-size="15" font-family="Arial, sans-serif" text-anchor="middle">N(4,1) = {(2,1), (3,1), (4,1)}</text>
+  </g>
+  
+  <!-- Graph sparsification -->
+  <g transform="translate(1100, 310)">
+    <rect x="0" y="0" width="280" height="70" fill="#2a2a2a" stroke="#888" stroke-width="2" rx="6"/>
+    <text x="140" y="25" fill="#ddd" font-size="17" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Graph Sparsification</text>
+    <text x="140" y="43" fill="#aaa" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">Logarithmic attention uses</text>
+    <text x="140" y="58" fill="#aaa" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">O(log T) edges per node</text>
+  </g>
+</svg>

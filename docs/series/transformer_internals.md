@@ -12,6 +12,8 @@ In particular, our (perhaps ambitious) thesis is: despite the diversity of
 ideas in this space, <span class="term">**a handful of mental models
 and metaphors is sufficient to understand the research frontier**</span>.
 
+![Lead Image](../img/post0/lead-image.svg)
+
 To this end, we hope to explore the following ideas in this and future articles. (If some of these terms are unfamiliar, that's expected - we'll develop each from first principles.)
 
 * <span class="term">Transformer models</span> as defining <span class="idea">information flow through a grid graph</span>
@@ -129,12 +131,14 @@ We can frame the two core operations within a layer as follows:
 * MLP as solo computation - actors individually performing computation on their own post-attention
   state.
 
-```
-# Attention: collaboration step - pull from previous actors at the same layer
-$z_{t,l} = x_{t,l} + \text{Attend}(x_{1,l}, x_{2,l}, ..., x_{t,l})$
-
-# MLP: solo step - compute locally on the post-attention state
-$x_{t,l+1} = z_{t,l} + \text{MLP}(z_{t,l})$
+```math
+\begin{aligned}
+&\texttt{# Attention: collaboration step - pull from previous actors at the same layer} \\
+& z_{t,l} = x_{t,l} + \operatorname{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
+\\
+&\texttt{# MLP: solo step - compute locally on the post-attention state} \\
+& x_{t,l+1} = z_{t,l} + \operatorname{MLP}(z_{t,l})
+\end{aligned}
 ```
 
 With this framing, a single layer is implemented by multiple *collaborating actors*, using attention
@@ -198,44 +202,40 @@ These questions correspond directly to the roles played by keys, queries, and va
 
 In pseudocode:
 
+```math
+\begin{aligned}
+&\texttt{# scores each key by taking a dot product with our query} \\
+&\texttt{for u in range(1, t+1):} \\
+&\quad score_{t,u} = q_t^{\mathrm{T}} k_u \\
+\\
+&\texttt{# normalize the scores to sum to 1 via softmax} \\
+&\texttt{for u in range(1, t+1):} \\
+&\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) / \sum_{j\le t} \exp(\mathrm{score}_{t,j}) \\
+\\
+&\texttt{# create a weighted average of values based on attention scores} \\
+& h_t = \sum_{u\le t} a_{t,u} \cdot v_u \\
+\\
+&\texttt{# multiply by another matrix W_O before adding to the residual stream} \\
+& z_{t,l} = x_{t,l} + W_O h_t
+\end{aligned}
 ```
-# scores each key by taking a dot product with our query
-for u in range(1, t+1):
-    $score_{t, u} = q_t^T k_u$
 
-# normalize the scores to sum to 1 via softmax
-for u in range(1, t+1):
-    $a_{t,u} = \exp(\text{score}_{t, u}) / \sum_{j\le t} \exp(\text{score}_{t, j})$
-
-# create a weighted average of values based on attention scores
-$h_t = \sum_{u\le t} a_{t,u} \cdot v_u$
-
-# multiply by another matrix W_O before adding to the residual stream
-$z_{t,l} = x_{t,l} + W_O h_t$
-```
-
-Note that this pseudocode is pedagogical; in practice, these computations are implemented in
-parallel.
+(Note that this pseudocode is pedagogical; in practice, these computations are implemented in
+parallel.)
 
 ### 4.2 Takeaways for Interpretability
 Below are a few important implications of the attention mechanism on how information flows through
 a transformer model. 
 
-<span class="idea">Separation of Concerns</span>
+<span class="idea">Separation of Concerns:</span> queries and keys decide <span class="idea">where
+to read</span>; values and $W_O$ determine <span class="idea">what to write</span>. In
+interpretability terms, this separation is described as <span class="term">QK and OV circuits</span>. 
 
-Queries and keys decide <span class="idea">where to read</span>; values and $W_O$
-determine <span class="idea">what to write</span>. In interpretability terms, this
-separation is described as <span class="term">QK and OV circuits</span>. 
-
-<span class="idea">Linearity Modulo Attention Pattern</span>
-
-The only source of nonlinearity comes from the softmax operation, which is part of the QK circuit
+<span class="idea">Linearity Modulo Attention Pattern:</span> the only source of nonlinearity comes from the softmax operation, which is part of the QK circuit
 (determining the attention pattern). If we fix the attention pattern, the entire attention operation
 becomes a linear function of its inputs.
 
-<span class="idea">Additive Integration</span>
-
-The imported content is added to the residual state; nothing is overwritten outright.
+<span class="idea">Additive Integration:</span> the imported content is added to the residual state; nothing is overwritten outright.
 
 ## 5. Computational Complexity of Attention
 ### 5.1 Complexity Derivation
@@ -293,46 +293,46 @@ stream.
 
 In pseudocode:
 
-```
-# concat-then-project formulation
-# Let $h_t^1, h_t^2, ..., h_t^H$ denote the outputs from each of H heads
-# (each is a weighted average of values from that head, of dimension $D/H$)
-
-$h_t = concat(h_t^1, …, h_t^H)$  # concatenate head outputs
-$z_{t,l} = x_{t,l} + W_O h_t$    # project and add to residual stream
+```math
+\begin{aligned}
+&\texttt{# concat-then-project formulation} \\
+&\texttt{# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
+&\texttt{# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+\\
+& h_t = \operatorname{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{# concatenate head outputs} \\
+& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{# project and add to residual stream}
+\end{aligned}
 ```
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent
 to summing linear projections applied to the individual slices. 
 
-```
-# equivalent independent-adds formulation
-# $W_O^h$ is the slice of $W_O$ corresponding to head $h$
-$z_{t,l} = x_{t,l} + \sum_h (W_O^h h_t^h)$
+```math
+\begin{aligned}
+&\texttt{# equivalent independent-adds formulation} \\
+&\texttt{# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
+& z_{t,l} = x_{t,l} + \sum_h (W_O^h h_t^h)
+\end{aligned}
 ```
 
-With the latter formulation, we see that each head writes *independently and additively* into the 
-residual stream through its own projection slice $W_O^h$.
+With the latter formulation, we see that each head writes <span class="idea">independently and
+additively</span> into the residual stream through its own projection slice $W_O^h$.
 
 The dual framing of multi-head attention plays a significant role in mechanistic interpretability
 work. A few consequences:
 
-<span class="idea">Head specialization and circuits</span>
-The work partitioning view shows how different heads can specialize to "look for different things,"
+<span class="idea">Head specialization and circuits:</span> the work partitioning view shows how different heads can specialize to "look for different things,"
 composing into sophisticated circuits. [Induction heads](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html) are a beautiful example of
 head composition across layers in action.
 
-<span class="idea">Low-rank, subspace-targeted writes</span>
-A head can only modify the residual within the column space of $W_O^h$ - at most rank $d_h$. Heads
-are hence low-rank writers into subspaces of the shared stream.
+<span class="idea">Low-rank, subspace-targeted writes:</span> a head can only modify the residual 
+within the column space of $W_O^h$ - at most rank $d_h$. Heads are hence low-rank writers into subspaces of the shared stream.
 
-<span class="idea">Potentially limited interaction between heads</span>
-If two heads write largely into disjoint or orthogonal subspaces, later computation may treat their
+<span class="idea">Potentially limited interaction between heads:</span> if two heads write largely into disjoint or orthogonal subspaces, later computation may treat their
 contributions as independent. Overlap enables constructive or destructive interference. The geometry
 of $W_O$ therefore partitions bandwidth and mediates the extent to which separate heads interact.
 
-<span class="idea">Implicit memory management</span>
-Updates are additive and persistent. Information written by a head persists unless future layers
+<span class="idea">Implicit memory management:</span> updates are additive and persistent. Information written by a head persists unless future layers
 actively overwrite or counter-write it. Since bandwidth is finite (dimension $D$), writing one thing
 necessarily crowds others. Research by Anthropic has found empirically that some heads perform a
 sort of "memory management" role, actively "deleting previous writes" that are no longer needed.
@@ -385,18 +385,18 @@ do we really need every attention edge? Can we instead prune most edges while st
 good connectivity - that is, ensuring information can still flow from any stream to any other stream within reasonable depth?
 
 This section explores exactly this idea. We'll start by introducing some terminology to make these
-notions precise, and then show how the frame of *static graph sparsification* unifies several
-efficient attention variants.
+notions precise, and then show how the frame of <span class="term">static graph sparsification<span> 
+unifies several efficient attention variants.
 
 ### 8.1 Terminology
-**Neighborhoods**
-
+<span class="term">Neighborhoods</span>
 Define $N(t, l)$ as the <span class="term">attention neighborhood</span> of node $(t, l)$: that is, the set of nodes that the
 actor at $(t, l)$ can attend to. The actor at $(t, l)$ computes attention only over nodes in
 $N(t, l)$, ignoring all others. In ordinary attention, we have $N(t, l) = \\{(1, l), (2, l), \ldots, (t, l)\\}$, i.e. all previous nodes in the current layer. 
 
 We'll see that a large number of efficient attention mechanisms boil down to simply defining $N(t, l)$
-in different ways. In particular, these mechanisms **shrink** the neighborhood to some subset of the full ordinary neighborhood. Why does this help? We have the following observation:
+in different ways. In particular, these mechanisms <span class="idea">shrink</span> the neighborhood to some subset of the full ordinary neighborhood. Why does this help? We have the following
+observation:
 
 Observation: if we fix neighborhood size to some constant $w$, the time complexity of generating $T$ tokens is $\mathcal{O}(TD^2 + TDw) = \mathcal{O}(TDw)$, assuming the second term still dominates. This is a 
 factor of $T/w$ saving over ordinary attention.
@@ -404,16 +404,16 @@ factor of $T/w$ saving over ordinary attention.
 The reasoning mirrors Section 5: both the query-key scoring and value-aggregation steps now cost
 $\mathcal{O}(wD)$ per token instead of $\mathcal{O}(tD)$.
 
-**Static vs Dynamic Sparsification**
+<span class="term">Static vs Dynamic Sparsification</span>
 
-The term *sparsification* in graph theory refers to removing some set of edges. To shrink 
-neighborhoods from the full set in ordinary attention is to *sparsify* the underlying
-information flow graph. This sparsification is *static* because we do it once upfront. *Dynamic*
+The term <span class="term">sparsification</span> in graph theory refers to removing some set of edges. To shrink 
+neighborhoods from the full set in ordinary attention is to <span class="term">sparsify</span> the underlying
+information flow graph. This sparsification is <span class="term">static</span> because we do it once upfront. <span class="term">Dynamic</span>
 sparsity, by contrast, refers to techniques in which we remove edges based on the content of the
 sequence being processed. We'll explore dynamic sparsity in future articles, and stick to static
 methods here.
 
-**Receptive Field**
+<span class="term">Receptive Field</span>
 
 Let's also make the notion of "preserving information flow" more concrete. We'll define the
 <span class="term">receptive field</span> of node $(t, l)$ as the set of input
@@ -507,11 +507,11 @@ where $N_{base}(t, l)$ is the neighborhood from whichever base sparsification
 method we're augmenting (e.g. sliding window).
 
 While we've motivated global tokens through the frame of connectivity preservation, they're often
-motivated by empirical findings about *attention sinks*. Interestingly, the [graph lens](https://publish.obsidian.md/the-tensor-throne/Transformers+as+GNNs/Attention+sinks+from+the+graph+perspective) reveals a deep connection between these.
+motivated by empirical findings about <span class="term">attention sinks</span>. Interestingly, the [graph lens](https://publish.obsidian.md/the-tensor-throne/Transformers+as+GNNs/Attention+sinks+from+the+graph+perspective) reveals a deep connection between these.
 
 ### 8.6 Comparing Static Sparsification Methods
-The table below summarizes the static sparsification methods we've discussed. RF here stands for
-"Receptive Field."
+The table below summarizes the static sparsification methods we've discussed. (RF here stands for
+"Receptive Field," and "w.h.p." for "with high probability.")
 
 | Technique | Neighborhood Size | Complexity | RF Growth | Full RF Depth |
 |-----------|------------------|------------|-----------|---------------|
@@ -531,7 +531,8 @@ more depth in a future article on dynamic sparsity. Nevertheless, understanding 
 ---
 
 ## 9. Conclusion and Future Directions
-We've developed a lens for viewing transformers through information flow graphs, yielding several key frames that illuminate both design and mechanism:
+We've developed a lens for viewing transformers through information flow graphs, yielding several
+key frames that illuminate both design and mechanism:
 
 - The grid graph as a substrate for information flow
 - Residual streams as fixed-bandwidth information highways
@@ -546,27 +547,23 @@ pruning edges while preserving receptive fields. The graph lens makes their trad
 
 In future articles, we'll apply this same lens to more ideas from the research frontier:
 
-**Dynamic Sparsification and Routing** 
+<span class="term">Dynamic Sparsification and Routing:</span> instead of committing to fixed 
+neighborhoods upfront, what if models dynamically select which edges matter based on content? We'll 
+show how several efficient attention methods, from locality sensitive hashing in Reformer to 
+DeepSeek's recent "lightning indexer" can be understood as dynamic graph sparsification, where
+$N(t,l)$ becomes a function of the sequence being processed.
 
-Instead of committing to fixed neighborhoods upfront, what if models dynamically select which edges
-matter based on content? We'll show how several efficient attention methods, from locality
-sensitive hashing in Reformer to DeepSeek's recent "lightning indexer" can be understood as
-dynamic graph sparsification, where $N(t,l)$ becomes a function of the sequence being processed.
+<span class="term">Kernelized Attention and Factor Graphs:</span> techniques like Performer, Linear 
+Transformer, and Linformer are typically understood through linear algebra: kernel approximations,
+low-rank factorizations, reordered matrix multiplications. But there's a complementary, unifying
+graph view: these methods can be understood as introducing new intermediary nodes, which the
+original nodes broadcast to and receive from. The resulting structure is a <span class="term">factor graph.</span>
 
-**Kernelized Attention and Factor Graphs**
-
-Techniques like Performer, Linear Transformer, and Linformer are typically understood through
-linear algebra: kernel approximations, low-rank factorizations, reordered matrix multiplications.
-But there's a complementary, unifying graph view: these methods can be understood as introducing
-new intermediary nodes, which the original nodes broadcast to and receive from. The resulting
-structure is a factor graph.
-
-**Sparse Memory Layers and Continual Learning**
-
-While we've focused on attention, the graph lens and the sparsity theme extend to emerging ideas
+<span class="term">Sparse Memory Layers and Continual Learning:</span> while we've focused on attention, the graph lens and the sparsity theme extend to emerging ideas
 for improving or replacing MLPs. Recent work on sparse memory layers (like Meta's continual
 learning via sparse memory finetuning) replaces dense MLPs with sparse, addressable memory that
 can be selectively updated. This enables models to acquire new knowledge without catastrophic forgetting, a longstanding challenge in continual learning.
 
 The core takeaway we hope to leave readers with is: reasoning about transformers through their information flow graphs - analyzing topology, dynamics, and routing mechanisms - provides a 
-unifying language for understanding the landscape of modern architectures, from attention variants to memory systems to continual learning.
+unifying language for understanding the landscape of modern architectures, from attention variants
+to memory systems to continual learning.
