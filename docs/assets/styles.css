@@ -1,0 +1,22 @@
+/* Optional helper classes for colored text */
+/* === Custom text styles === */
+
+/* Bold cyan for key terms */
+.term {
+    color: #00bcd4;          /* material cyan-500 */
+    font-weight: 700;
+}
+  
+/* Green italics for novel ideas or insights */
+.idea {
+    color: #43a047;          /* material green-600 */
+    font-style: italic;
+    font-weight: 500;
+}
+  
+/* Optional: automatic dark-mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .term  { color: #4dd0e1; }   /* lighter cyan */
+    .idea  { color: #81c784; }   /* lighter green */
+}
+  

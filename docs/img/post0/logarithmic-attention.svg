@@ -1,0 +1,182 @@
+<svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1600" height="800" fill="#1a1a1a"/>
+  
+  <!-- Define arrow markers -->
+  <defs>
+    <!-- Blue arrow for residual updates -->
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a9eff" />
+    </marker>
+    
+    <!-- Red arrow for attention -->
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ff6b6b" />
+    </marker>
+  </defs>
+  
+  <!-- Grid positions: 8 tokens, 3 layers (l=0 to l=2) -->
+  <!-- x positions: 200, 320, 440, 560, 680, 800, 920, 1040 -->
+  <!-- y positions: 600, 400, 200 (bottom to top) -->
+  
+  <!-- VERTICAL EDGES (Residual Updates) - Blue arrows for all tokens -->
+  <line x1="200" y1="600" x2="200" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="200" y1="400" x2="200" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="320" y1="600" x2="320" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="320" y1="400" x2="320" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="440" y1="600" x2="440" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="440" y1="400" x2="440" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="560" y1="600" x2="560" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="560" y1="400" x2="560" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="680" y1="600" x2="680" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="680" y1="400" x2="680" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="800" y1="600" x2="800" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="800" y1="400" x2="800" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="920" y1="600" x2="920" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="920" y1="400" x2="920" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <line x1="1040" y1="600" x2="1040" y2="400" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="1040" y1="400" x2="1040" y2="200" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- HORIZONTAL EDGES (Logarithmic Attention) - Red arrows -->
+  
+  <!-- Layer l=0: From node (1,0) with jumps +1, +2, +4 -->
+  <!-- (1,0) → (2,0): jump of 1 -->
+  <line x1="200" y1="600" x2="320" y2="600" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <text x="260" y="590" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+1</text>
+  
+  <!-- (1,0) → (3,0): jump of 2 -->
+  <path d="M 200,600 Q 320,580 440,600" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="320" y="570" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+2</text>
+  
+  <!-- (1,0) → (5,0): jump of 4 -->
+  <path d="M 200,600 Q 440,560 680,600" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="440" y="550" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+4</text>
+  
+  <!-- Layer l=1: From nodes (2,1), (3,1), (5,1) -->
+  <!-- From (2,1) -->
+  <line x1="320" y1="400" x2="440" y2="400" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <text x="380" y="390" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+1</text>
+  
+  <path d="M 320,400 Q 440,380 560,400" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="440" y="370" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+2</text>
+  
+  <path d="M 320,400 Q 560,360 800,400" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="560" y="350" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+4</text>
+  
+  <!-- From (3,1) -->
+  <line x1="440" y1="400" x2="560" y2="400" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  
+  <path d="M 440,400 Q 560,420 680,400" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="560" y="430" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+2</text>
+  
+  <path d="M 440,400 Q 680,440 920,400" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="680" y="450" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+4</text>
+  
+  <!-- From (5,1) -->
+  <line x1="680" y1="400" x2="800" y2="400" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  
+  <path d="M 680,400 Q 800,380 920,400" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  
+  <!-- Layer l=2: From nodes (4,2), (6,2), (7,2) -->
+  <!-- From (4,2) -->
+  <line x1="560" y1="200" x2="680" y2="200" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <text x="620" y="190" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+1</text>
+  
+  <path d="M 560,200 Q 680,180 800,200" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="680" y="170" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+2</text>
+  
+  <path d="M 560,200 Q 800,160 1040,200" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="800" y="150" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+4</text>
+  
+  <!-- From (6,2) -->
+  <line x1="800" y1="200" x2="920" y2="200" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  
+  <path d="M 800,200 Q 920,220 1040,200" stroke="#ff6b6b" stroke-width="3" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="920" y="230" fill="#ff6b6b" font-size="16" font-family="Arial, sans-serif">+2</text>
+  
+  <!-- From (7,2) -->
+  <line x1="920" y1="200" x2="1040" y2="200" stroke="#ff6b6b" stroke-width="3" marker-end="url(#arrowRed)"/>
+  
+  <!-- NODES (drawn on top) -->
+  <!-- Layer l=0 -->
+  <circle cx="200" cy="600" r="18" fill="#ffeb3b" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="600" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=1 -->
+  <circle cx="200" cy="400" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="400" r="18" fill="#90ee90" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="400" r="18" fill="#90ee90" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="400" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="400" r="18" fill="#90ee90" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="400" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="400" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="400" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=2 -->
+  <circle cx="200" cy="200" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="320" cy="200" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="440" cy="200" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="560" cy="200" r="18" fill="#ffa07a" stroke="#555" stroke-width="2"/>
+  <circle cx="680" cy="200" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="800" cy="200" r="18" fill="#ffa07a" stroke="#555" stroke-width="2"/>
+  <circle cx="920" cy="200" r="18" fill="#ffa07a" stroke="#555" stroke-width="2"/>
+  <circle cx="1040" cy="200" r="18" fill="#87ceeb" stroke="#555" stroke-width="2"/>
+  
+  <!-- LABELS -->
+  <!-- Layer labels (left side) -->
+  <text x="120" y="605" fill="#888" font-size="20" font-family="Arial, sans-serif">l=0</text>
+  <text x="120" y="405" fill="#888" font-size="20" font-family="Arial, sans-serif">l=1</text>
+  <text x="120" y="205" fill="#888" font-size="20" font-family="Arial, sans-serif">l=2</text>
+  
+  <!-- Token labels (bottom) -->
+  <text x="193" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₁</text>
+  <text x="313" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₂</text>
+  <text x="433" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₃</text>
+  <text x="553" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₄</text>
+  <text x="673" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₅</text>
+  <text x="793" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₆</text>
+  <text x="913" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₇</text>
+  <text x="1033" y="650" fill="#666" font-size="18" font-family="Arial, sans-serif">w₈</text>
+  
+  <!-- Axis labels -->
+  <text x="80" y="420" fill="#7a9ab5" font-size="22" font-family="Arial, sans-serif" transform="rotate(-90 80 420)" font-weight="600">Depth (Layers)</text>
+  <text x="520" y="715" fill="#888" font-size="22" font-family="Arial, sans-serif" font-weight="600">Time (Tokens) →</text>
+  
+  <!-- Title -->
+  <text x="800" y="60" fill="#ddd" font-size="28" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Logarithmic Attention: Information Flow from w₁ to w₈</text>
+  
+  <!-- Legend box -->
+  <g transform="translate(1180, 120)">
+    <rect x="0" y="0" width="380" height="240" fill="#2a2a2a" stroke="#555" stroke-width="2" rx="8"/>
+    
+    <text x="190" y="35" fill="#ddd" font-size="22" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Node Colors</text>
+    
+    <circle cx="30" cy="65" r="12" fill="#ffeb3b"/>
+    <text x="55" y="72" fill="#ddd" font-size="16" font-family="Arial, sans-serif">Source (token 1, layer 0)</text>
+    
+    <circle cx="30" cy="100" r="12" fill="#90ee90"/>
+    <text x="55" y="107" fill="#ddd" font-size="16" font-family="Arial, sans-serif">Reachable in layer 1</text>
+    <text x="55" y="122" fill="#999" font-size="13" font-family="Arial, sans-serif">(nodes 2, 3, 5)</text>
+    
+    <circle cx="30" cy="150" r="12" fill="#ffa07a"/>
+    <text x="55" y="157" fill="#ddd" font-size="16" font-family="Arial, sans-serif">Newly reachable in layer 2</text>
+    <text x="55" y="172" fill="#999" font-size="13" font-family="Arial, sans-serif">(nodes 4, 6, 7)</text>
+    
+    <circle cx="30" cy="200" r="12" fill="#87ceeb"/>
+    <text x="55" y="207" fill="#ddd" font-size="16" font-family="Arial, sans-serif">Target (token 8, layer 2)</text>
+    
+  </g>
+</svg>

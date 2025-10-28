@@ -1,0 +1,203 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1400" height="900" fill="#1a1a1a"/>
+  
+  <!-- Define arrow markers -->
+  <defs>
+    <!-- Blue arrow for residual updates -->
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a9eff" />
+    </marker>
+    
+    <!-- Red arrow for attention -->
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ff6b6b" />
+    </marker>
+  </defs>
+  
+  <!-- Grid positions: 5 tokens, 4 layers (l=0 to l=3) -->
+  <!-- x positions: 150, 300, 450, 600, 750 -->
+  <!-- y positions: 700, 525, 350, 175 (bottom to top) -->
+  
+  <!-- VERTICAL EDGES (Residual Updates) - Blue arrows -->
+  <!-- Token 1 -->
+  <line x1="150" y1="700" x2="150" y2="525" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="150" y1="525" x2="150" y2="350" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="150" y1="350" x2="150" y2="175" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 2 -->
+  <line x1="300" y1="700" x2="300" y2="525" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="300" y1="525" x2="300" y2="350" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="300" y1="350" x2="300" y2="175" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 3 -->
+  <line x1="450" y1="700" x2="450" y2="525" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="450" y1="525" x2="450" y2="350" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="450" y1="350" x2="450" y2="175" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 4 -->
+  <line x1="600" y1="700" x2="600" y2="525" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="600" y1="525" x2="600" y2="350" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="600" y1="350" x2="600" y2="175" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- Token 5 -->
+  <line x1="750" y1="700" x2="750" y2="525" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="750" y1="525" x2="750" y2="350" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  <line x1="750" y1="350" x2="750" y2="175" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+  
+  <!-- HORIZONTAL EDGES (Attention) - Red arrows -->
+  
+  <!-- Layer l=0 attention edges -->
+  <!-- Token 2 attends to token 1 -->
+  <path d="M 150,700 Q 225,690 300,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 3 attends to tokens 1,2 -->
+  <path d="M 150,700 Q 225,680 300,680 Q 375,680 450,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 300,700 Q 375,690 450,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 4 attends to tokens 1,2,3 -->
+  <path d="M 150,700 Q 300,670 450,670 Q 525,670 600,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 300,700 Q 375,680 450,680 Q 525,680 600,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 450,700 Q 525,690 600,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 5 attends to tokens 1,2,3,4 -->
+  <path d="M 150,700 Q 350,660 550,660 Q 650,660 750,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.5"/>
+  <path d="M 300,700 Q 425,670 550,670 Q 650,670 750,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 450,700 Q 525,680 600,680 Q 675,680 750,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 600,700 Q 675,690 750,700" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Layer l=1 attention edges -->
+  <!-- Token 2 attends to token 1 -->
+  <path d="M 150,525 Q 225,515 300,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 3 attends to tokens 1,2 -->
+  <path d="M 150,525 Q 225,505 300,505 Q 375,505 450,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 300,525 Q 375,515 450,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 4 attends to tokens 1,2,3 -->
+  <path d="M 150,525 Q 300,495 450,495 Q 525,495 600,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 300,525 Q 375,505 450,505 Q 525,505 600,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 450,525 Q 525,515 600,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 5 attends to tokens 1,2,3,4 -->
+  <path d="M 150,525 Q 350,485 550,485 Q 650,485 750,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.5"/>
+  <path d="M 300,525 Q 425,495 550,495 Q 650,495 750,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 450,525 Q 525,505 600,505 Q 675,505 750,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 600,525 Q 675,515 750,525" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Layer l=2 attention edges -->
+  <!-- Token 2 attends to token 1 -->
+  <path d="M 150,350 Q 225,340 300,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 3 attends to tokens 1,2 -->
+  <path d="M 150,350 Q 225,330 300,330 Q 375,330 450,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 300,350 Q 375,340 450,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 4 attends to tokens 1,2,3 -->
+  <path d="M 150,350 Q 300,320 450,320 Q 525,320 600,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 300,350 Q 375,330 450,330 Q 525,330 600,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 450,350 Q 525,340 600,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 5 attends to tokens 1,2,3,4 -->
+  <path d="M 150,350 Q 350,310 550,310 Q 650,310 750,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.5"/>
+  <path d="M 300,350 Q 425,320 550,320 Q 650,320 750,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 450,350 Q 525,330 600,330 Q 675,330 750,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 600,350 Q 675,340 750,350" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Layer l=3 attention edges -->
+  <!-- Token 2 attends to token 1 -->
+  <path d="M 150,175 Q 225,165 300,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 3 attends to tokens 1,2 -->
+  <path d="M 150,175 Q 225,155 300,155 Q 375,155 450,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 300,175 Q 375,165 450,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 4 attends to tokens 1,2,3 -->
+  <path d="M 150,175 Q 300,145 450,145 Q 525,145 600,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 300,175 Q 375,155 450,155 Q 525,155 600,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 450,175 Q 525,165 600,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- Token 5 attends to tokens 1,2,3,4 -->
+  <path d="M 150,175 Q 350,135 550,135 Q 650,135 750,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.5"/>
+  <path d="M 300,175 Q 425,145 550,145 Q 650,145 750,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.6"/>
+  <path d="M 450,175 Q 525,155 600,155 Q 675,155 750,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  <path d="M 600,175 Q 675,165 750,175" stroke="#ff6b6b" stroke-width="2.5" fill="none" marker-end="url(#arrowRed)" opacity="0.7"/>
+  
+  <!-- NODES (drawn on top of edges) -->
+  <!-- Layer l=0 -->
+  <circle cx="150" cy="700" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="300" cy="700" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="450" cy="700" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="600" cy="700" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="750" cy="700" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=1 -->
+  <circle cx="150" cy="525" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="300" cy="525" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="450" cy="525" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="600" cy="525" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="750" cy="525" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=2 -->
+  <circle cx="150" cy="350" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="300" cy="350" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="450" cy="350" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="600" cy="350" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="750" cy="350" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- Layer l=3 -->
+  <circle cx="150" cy="175" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="300" cy="175" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="450" cy="175" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="600" cy="175" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  <circle cx="750" cy="175" r="18" fill="white" stroke="#555" stroke-width="2"/>
+  
+  <!-- LABELS -->
+  <!-- Layer labels (left side) -->
+  <text x="60" y="705" fill="#888" font-size="20" font-family="Arial, sans-serif">l=0</text>
+  <text x="60" y="530" fill="#888" font-size="20" font-family="Arial, sans-serif">l=1</text>
+  <text x="60" y="355" fill="#888" font-size="20" font-family="Arial, sans-serif">l=2</text>
+  <text x="60" y="180" fill="#888" font-size="20" font-family="Arial, sans-serif">l=3</text>
+  
+  <!-- Token labels (bottom) -->
+  <text x="143" y="750" fill="#666" font-size="18" font-family="Arial, sans-serif">w₁</text>
+  <text x="293" y="750" fill="#666" font-size="18" font-family="Arial, sans-serif">w₂</text>
+  <text x="443" y="750" fill="#666" font-size="18" font-family="Arial, sans-serif">w₃</text>
+  <text x="593" y="750" fill="#666" font-size="18" font-family="Arial, sans-serif">w₄</text>
+  <text x="743" y="750" fill="#666" font-size="18" font-family="Arial, sans-serif">w₅</text>
+  
+  <!-- Node labels for a few key positions -->
+  <text x="100" y="705" fill="#aaa" font-size="16" font-family="Arial, sans-serif">
+    x<tspan font-size="11" dy="3">1,0</tspan>
+  </text>
+  <text x="250" y="530" fill="#aaa" font-size="16" font-family="Arial, sans-serif">
+    x<tspan font-size="11" dy="3">2,1</tspan>
+  </text>
+  <text x="400" y="355" fill="#aaa" font-size="16" font-family="Arial, sans-serif">
+    x<tspan font-size="11" dy="3">3,2</tspan>
+  </text>
+  <text x="550" y="180" fill="#aaa" font-size="16" font-family="Arial, sans-serif">
+    x<tspan font-size="11" dy="3">4,3</tspan>
+  </text>
+  
+  <!-- Axis labels -->
+  <text x="30" y="440" fill="#7a9ab5" font-size="22" font-family="Arial, sans-serif" transform="rotate(-90 30 440)" font-weight="600">Depth (Layers)</text>
+  <text x="380" y="815" fill="#888" font-size="22" font-family="Arial, sans-serif" font-weight="600">Time (Tokens) →</text>
+  
+  <!-- Legend box -->
+  <g transform="translate(1020, 30)">
+    <rect x="0" y="0" width="340" height="160" fill="#2a2a2a" stroke="#555" stroke-width="2" rx="8"/>
+    
+    <text x="170" y="35" fill="#ddd" font-size="24" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Legend</text>
+    
+    <!-- Residual Update -->
+    <line x1="30" y1="75" x2="30" y2="95" stroke="#4a9eff" stroke-width="3" marker-end="url(#arrowBlue)" stroke-dasharray="8,4"/>
+    <text x="60" y="88" fill="#ddd" font-size="18" font-family="Arial, sans-serif" font-weight="500">Residual Update</text>
+    <text x="60" y="105" fill="#999" font-size="14" font-family="Arial, sans-serif" font-style="italic">(t, l) → (t, l+1)</text>
+    
+    <!-- Attention -->
+    <line x1="25" y1="135" x2="45" y2="135" stroke="#ff6b6b" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+    <text x="60" y="142" fill="#ddd" font-size="18" font-family="Arial, sans-serif" font-weight="500">Attention</text>
+    <text x="60" y="155" fill="#999" font-size="14" font-family="Arial, sans-serif" font-style="italic">(u, l) → (t, l)</text>
+  </g>
+</svg>

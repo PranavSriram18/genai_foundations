@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#2c3e50">
+    Transformer as an Information Flow Grid
+  </text>
+  
+  <!-- Axis Labels -->
+  <text x="400" y="570" text-anchor="middle" font-size="16" fill="#34495e" font-weight="600">
+    Time (Tokens) →
+  </text>
+  
+  <text x="15" y="300" text-anchor="middle" font-size="16" fill="#34495e" font-weight="600" transform="rotate(-90, 15, 300)">
+    Depth (Layers) →
+  </text>
+  
+  <!-- Grid Parameters -->
+  <defs>
+    <!-- Arrow marker for edges -->
+    <marker id="arrowhead-vertical" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#3498db" />
+    </marker>
+    <marker id="arrowhead-horizontal" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#e74c3c" />
+    </marker>
+  </defs>
+  
+  <!-- Grid nodes and edges -->
+  <!-- Layer 0 (Input embeddings) -->
+  <g id="layer-0">
+    <text x="80" y="480" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₁,₀</text>
+    <circle cx="100" cy="475" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="180" y="480" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₂,₀</text>
+    <circle cx="200" cy="475" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="280" y="480" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₃,₀</text>
+    <circle cx="300" cy="475" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="380" y="480" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₄,₀</text>
+    <circle cx="400" cy="475" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="480" y="480" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₅,₀</text>
+    <circle cx="500" cy="475" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+  </g>
+  
+  <!-- Layer 1 -->
+  <g id="layer-1">
+    <text x="80" y="380" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₁,₁</text>
+    <circle cx="100" cy="375" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="180" y="380" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₂,₁</text>
+    <circle cx="200" cy="375" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="280" y="380" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₃,₁</text>
+    <circle cx="300" cy="375" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="380" y="380" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₄,₁</text>
+    <circle cx="400" cy="375" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="480" y="380" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₅,₁</text>
+    <circle cx="500" cy="375" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+  </g>
+  
+  <!-- Layer 2 -->
+  <g id="layer-2">
+    <text x="80" y="280" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₁,₂</text>
+    <circle cx="100" cy="275" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="180" y="280" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₂,₂</text>
+    <circle cx="200" cy="275" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="280" y="280" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₃,₂</text>
+    <circle cx="300" cy="275" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="380" y="280" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₄,₂</text>
+    <circle cx="400" cy="275" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="480" y="280" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₅,₂</text>
+    <circle cx="500" cy="275" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+  </g>
+  
+  <!-- Layer 3 -->
+  <g id="layer-3">
+    <text x="80" y="180" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₁,₃</text>
+    <circle cx="100" cy="175" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="180" y="180" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₂,₃</text>
+    <circle cx="200" cy="175" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="280" y="180" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₃,₃</text>
+    <circle cx="300" cy="175" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="380" y="180" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₄,₃</text>
+    <circle cx="400" cy="175" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+    
+    <text x="480" y="180" text-anchor="end" font-size="14" fill="#7f8c8d" font-style="italic">x₅,₃</text>
+    <circle cx="500" cy="175" r="8" fill="#ecf0f1" stroke="#95a5a6" stroke-width="2"/>
+  </g>
+  
+  <!-- Vertical Edges (Residual connections) - showing column for token 3 -->
+  <line x1="300" y1="467" x2="300" y2="383" stroke="#3498db" stroke-width="2.5" marker-end="url(#arrowhead-vertical)" opacity="0.7"/>
+  <line x1="300" y1="367" x2="300" y2="283" stroke="#3498db" stroke-width="2.5" marker-end="url(#arrowhead-vertical)" opacity="0.7"/>
+  <line x1="300" y1="267" x2="300" y2="183" stroke="#3498db" stroke-width="2.5" marker-end="url(#arrowhead-vertical)" opacity="0.7"/>
+  
+  <!-- Horizontal Edges (Attention) - showing some examples in layer 2 -->
+  <line x1="108" y1="275" x2="192" y2="275" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowhead-horizontal)" opacity="0.5"/>
+  <line x1="208" y1="275" x2="292" y2="275" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowhead-horizontal)" opacity="0.5"/>
+  <!-- Curved arrow from (1,2) to (3,2) -->
+  <path d="M 108 275 Q 200 255 292 275" stroke="#e74c3c" stroke-width="2" fill="none" marker-end="url(#arrowhead-horizontal)" opacity="0.5"/>
+  
+  <!-- Legend -->
+  <g id="legend" transform="translate(580, 80)">
+    <rect x="0" y="0" width="200" height="120" fill="white" stroke="#bdc3c7" stroke-width="1" rx="5"/>
+    
+    <text x="100" y="25" text-anchor="middle" font-size="14" font-weight="600" fill="#2c3e50">Legend</text>
+    
+    <!-- Vertical edge -->
+    <line x1="20" y1="50" x2="20" y2="70" stroke="#3498db" stroke-width="2.5" marker-end="url(#arrowhead-vertical)"/>
+    <text x="35" y="63" font-size="12" fill="#34495e">Residual Update</text>
+    <text x="35" y="75" font-size="10" fill="#7f8c8d" font-style="italic">(t, l) → (t, l+1)</text>
+    
+    <!-- Horizontal edge -->
+    <line x1="20" y1="95" x2="40" y2="95" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowhead-horizontal)"/>
+    <text x="50" y="98" font-size="12" fill="#34495e">Attention</text>
+    <text x="50" y="110" font-size="10" fill="#7f8c8d" font-style="italic">(u, l) → (t, l)</text>
+  </g>
+  
+  <!-- Highlight residual stream -->
+  <rect x="285" y="160" width="30" height="330" fill="none" stroke="#2ecc71" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+  <text x="315" y="110" font-size="13" fill="#27ae60" font-weight="600">Residual Stream</text>
+  <text x="315" y="125" font-size="11" fill="#27ae60" font-style="italic">(token 3)</text>
+  
+  <!-- Token labels at bottom -->
+  <text x="100" y="515" text-anchor="middle" font-size="13" fill="#34495e">w₁</text>
+  <text x="200" y="515" text-anchor="middle" font-size="13" fill="#34495e">w₂</text>
+  <text x="300" y="515" text-anchor="middle" font-size="13" fill="#34495e">w₃</text>
+  <text x="400" y="515" text-anchor="middle" font-size="13" fill="#34495e">w₄</text>
+  <text x="500" y="515" text-anchor="middle" font-size="13" fill="#34495e">w₅</text>
+  
+  <!-- Layer labels on left -->
+  <text x="35" y="480" text-anchor="middle" font-size="13" fill="#34495e" font-weight="600">l=0</text>
+  <text x="35" y="380" text-anchor="middle" font-size="13" fill="#34495e" font-weight="600">l=1</text>
+  <text x="35" y="280" text-anchor="middle" font-size="13" fill="#34495e" font-weight="600">l=2</text>
+  <text x="35" y="180" text-anchor="middle" font-size="13" fill="#34495e" font-weight="600">l=3</text>
+</svg>
