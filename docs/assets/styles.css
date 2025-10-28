@@ -23,7 +23,14 @@
 mjx-container[display="true"] {
     text-align: left !important;
     white-space: pre !important;
+    margin-bottom: 1rem; /* new */
   }
+  
+/* Ensure consistent vertical spacing around images/figures */
+.md-typeset img {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
   
   
   

@@ -307,7 +307,6 @@ being added to the residual stream.
 
 In pseudocode:
 
-<div>
 $$
 \begin{aligned}
 &\text{# concat-then-project formulation} \\
@@ -317,13 +316,11 @@ $$
 &z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
 \end{aligned}
 $$
-</div>
 
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
 
-<div>
 $$
 \begin{aligned}
 &\text{# equivalent independent-adds formulation} \\
@@ -331,7 +328,6 @@ $$
 &z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
 \end{aligned}
 $$
-</div>
 
 
 
@@ -539,7 +535,7 @@ probability](https://theory.epfl.ch/courses/topicstcs/Lecture3.pdf).
 When sparsifying a graph, we naturally destroy some connectivity structure. The basic idea of
 global tokens is to mitigate some of this damage by augmenting the (sparsified) neighborhood of
 each node with a common set of nodes called global tokens:
-$N(t, l) = {(g_1, l), (g_2, l), \ldots, (g_k, l)} \cup N_{base}(t, l)$,
+$N(t, l) = \{ (g_1, l), (g_2, l), \ldots, (g_k, l) \} \cup N_{base}(t, l)$,
 where $N_{base}(t, l)$ is the neighborhood from whichever base sparsification 
 method we're augmenting (e.g. sliding window).
 
