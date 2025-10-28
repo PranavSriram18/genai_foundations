@@ -1,0 +1,246 @@
+<svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1600" height="800" fill="#1a1a1a"/>
+  
+  <!-- Define arrow markers with pastel colors -->
+  <defs>
+    <!-- Pastel blue arrow for QK circuit -->
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#a8c5f7" />
+    </marker>
+    
+    <!-- Pastel orange arrow for OV circuit -->
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ffb380" />
+    </marker>
+    
+    <!-- Pastel green arrow for residual connections -->
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7ed9a3" />
+    </marker>
+    
+    <!-- Pastel purple arrow for MLP -->
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#c5a3d9" />
+    </marker>
+  </defs>
+  
+  <!-- Grid positions: 5 tokens, 2 layers (better spacing) -->
+  <!-- Token positions: x = 150, 330, 510, 690, 870 (180 apart) -->
+  <!-- Layer positions: y = 600 (l=0), 250 (l=1) -->
+  
+  <!-- Layer 0 circles -->
+  <circle cx="150" cy="600" r="22" fill="white" stroke="#555" stroke-width="2"/>
+  <text x="150" y="608" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">1,0</tspan></text>
+  
+  <circle cx="330" cy="600" r="22" fill="white" stroke="#555" stroke-width="2"/>
+  <text x="330" y="608" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">2,0</tspan></text>
+  
+  <circle cx="510" cy="600" r="22" fill="white" stroke="#555" stroke-width="2"/>
+  <text x="510" y="608" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">3,0</tspan></text>
+  
+  <!-- Current node - highlighted -->
+  <circle cx="690" cy="600" r="22" fill="#ffd700" stroke="#ff8c00" stroke-width="3"/>
+  <text x="690" y="608" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">4,0</tspan></text>
+  
+  <circle cx="870" cy="600" r="22" fill="#ddd" stroke="#555" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Layer 1 circles -->
+  <circle cx="150" cy="250" r="22" fill="#ddd" stroke="#555" stroke-width="2" opacity="0.3"/>
+  <circle cx="330" cy="250" r="22" fill="#ddd" stroke="#555" stroke-width="2" opacity="0.3"/>
+  <circle cx="510" cy="250" r="22" fill="#ddd" stroke="#555" stroke-width="2" opacity="0.3"/>
+  
+  <circle cx="690" cy="250" r="22" fill="white" stroke="#555" stroke-width="2"/>
+  <text x="690" y="258" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">4,1</tspan></text>
+  
+  <!-- Node 5 at layer 1 - highlighted as current for that layer -->
+  <circle cx="870" cy="250" r="22" fill="#ffd700" stroke="#ff8c00" stroke-width="3"/>
+  <text x="870" y="258" fill="#000000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">5,1</tspan></text>
+  
+  <!-- K/Q/V squares for tokens 1,2,3,4 at layer 0 -->
+  <!-- Token 1 -->
+  <rect x="208" y="536" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="224" y="557" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">1,0</tspan></text>
+  
+  <rect x="208" y="584" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="224" y="605" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">1,0</tspan></text>
+  
+  <rect x="208" y="632" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="224" y="653" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">1,0</tspan></text>
+  
+  <!-- Token 2 -->
+  <rect x="388" y="536" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="404" y="557" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">2,0</tspan></text>
+  
+  <rect x="388" y="584" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="404" y="605" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">2,0</tspan></text>
+  
+  <rect x="388" y="632" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="404" y="653" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">2,0</tspan></text>
+  
+  <!-- Token 3 -->
+  <rect x="568" y="536" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="584" y="557" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">3,0</tspan></text>
+  
+  <rect x="568" y="584" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="584" y="605" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">3,0</tspan></text>
+  
+  <rect x="568" y="632" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="584" y="653" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">3,0</tspan></text>
+  
+  <!-- Token 4 (current) -->
+  <rect x="748" y="536" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="764" y="557" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">4,0</tspan></text>
+  
+  <rect x="748" y="584" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="764" y="605" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">4,0</tspan></text>
+  
+  <rect x="748" y="632" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="764" y="653" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">4,0</tspan></text>
+  
+  <!-- K/Q/V squares for tokens 4,5 at layer 1 -->
+  <!-- Token 4 at layer 1 -->
+  <rect x="748" y="186" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="764" y="207" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">4,1</tspan></text>
+  
+  <rect x="748" y="234" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="764" y="255" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">4,1</tspan></text>
+  
+  <rect x="748" y="282" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="764" y="303" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">4,1</tspan></text>
+  
+  <!-- Token 5 at layer 1 (current) -->
+  <rect x="928" y="186" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="944" y="207" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">q<tspan baseline-shift="sub" font-size="9">5,1</tspan></text>
+  
+  <rect x="928" y="234" width="32" height="32" fill="#d4e3ff" stroke="#7ba3e0" stroke-width="2" rx="4"/>
+  <text x="944" y="255" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">k<tspan baseline-shift="sub" font-size="9">5,1</tspan></text>
+  
+  <rect x="928" y="282" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="944" y="303" fill="#000000" font-size="12" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">v<tspan baseline-shift="sub" font-size="9">5,1</tspan></text>
+  
+  <!-- Edges from regular nodes to their QKV nodes - Layer 0 -->
+  <!-- Node 1 to q1, k1, v1 -->
+  <line x1="172" y1="594" x2="208" y2="560" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="172" y1="600" x2="208" y2="600" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="172" y1="606" x2="208" y2="648" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Node 2 to q2, k2, v2 -->
+  <line x1="352" y1="594" x2="388" y2="560" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="352" y1="600" x2="388" y2="600" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="352" y1="606" x2="388" y2="648" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Node 3 to q3, k3, v3 -->
+  <line x1="532" y1="594" x2="568" y2="560" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="532" y1="600" x2="568" y2="600" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="532" y1="606" x2="568" y2="648" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Node 4 to q4, k4, v4 -->
+  <line x1="712" y1="594" x2="748" y2="560" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="712" y1="600" x2="748" y2="600" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="712" y1="606" x2="748" y2="648" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Edges from regular nodes to their QKV nodes - Layer 1 -->
+  <!-- Node 4 (layer 1) to q4,1, k4,1, v4,1 -->
+  <line x1="712" y1="244" x2="748" y2="210" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="712" y1="250" x2="748" y2="250" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="712" y1="256" x2="748" y2="298" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Node 5 (layer 1) to q5,1, k5,1, v5,1 -->
+  <line x1="892" y1="244" x2="928" y2="210" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="892" y1="250" x2="928" y2="250" stroke="#a8c5f7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="892" y1="256" x2="928" y2="298" stroke="#ffb380" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  
+  <!-- QK Circuit Layer 0: Q4 to all K boxes (K1, K2, K3, K4) -->
+  <path d="M 764,568 Q 680,570 540,585 Q 420,595 240,600" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M 764,568 Q 700,575 600,585 Q 500,595 420,600" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M 764,568 Q 730,580 660,590 Q 620,595 600,600" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M 764,568 Q 764,576 764,584" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  
+  <!-- QK Circuit Layer 1: Q5 to K4, K5 -->
+  <path d="M 944,218 Q 890,230 820,245 Q 790,250 780,250" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M 944,218 Q 944,226 944,234" stroke="#a8c5f7" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/>
+  
+  <!-- Layer 0 Intermediate nodes -->
+  <!-- Residual Update square (pastel orange) -->
+  <rect x="650" y="478" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="666" y="499" fill="#8B0000" font-size="11" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">z<tspan baseline-shift="sub" font-size="9">4,0</tspan></text>
+  
+  <!-- Sum square (pastel green) -->
+  <rect x="674" y="375" width="32" height="32" fill="#d4f5e3" stroke="#7ed9a3" stroke-width="2" rx="4"/>
+  <text x="690" y="397" fill="#8B0000" font-size="18" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">⊕</text>
+  
+  <!-- Layer 1 Intermediate node -->
+  <!-- Residual Update square (pastel orange) above x_{5,1} -->
+  <rect x="854" y="128" width="32" height="32" fill="#ffe8d4" stroke="#ffb380" stroke-width="2" rx="4"/>
+  <text x="870" y="149" fill="#8B0000" font-size="11" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">z<tspan baseline-shift="sub" font-size="9">5,1</tspan></text>
+  
+  <!-- OV Circuit Layer 0: V1,V2,V3,V4 to Residual Update square -->
+  <path d="M 224,664 Q 300,640 460,570 Q 580,520 650,502" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  <path d="M 404,664 Q 450,630 540,570 Q 610,530 650,510" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  <path d="M 584,664 Q 610,620 635,570 Q 650,540 656,510" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  <path d="M 764,664 Q 740,620 700,570 Q 680,540 674,510" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  
+  <!-- OV Circuit Layer 1: V4,V5 to Residual Update square -->
+  <path d="M 764,314 Q 780,270 820,200 Q 840,170 854,160" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  <path d="M 944,314 Q 930,270 900,200 Q 885,170 880,160" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Layer 0: Current node to sum (pastel green arrow) labeled "id" -->
+  <line x1="690" y1="578" x2="690" y2="409" stroke="#7ed9a3" stroke-width="3" marker-end="url(#arrowGreen)"/>
+  <text x="707" y="495" fill="#7ed9a3" font-size="14" font-family="Arial, sans-serif" font-weight="700">id</text>
+  
+  <!-- Layer 0: Residual update to sum (PASTEL ORANGE arrow) labeled "residual" -->
+  <path d="M 666,510 Q 676,450 674,407" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
+  <text x="615" y="460" fill="#ffb380" font-size="13" font-family="Arial, sans-serif" font-weight="700">residual</text>
+  
+  <!-- Layer 0: Sum to next layer: two arrows -->
+  <!-- Identity path (straight pastel green arrow) labeled "id" -->
+  <line x1="690" y1="375" x2="690" y2="272" stroke="#7ed9a3" stroke-width="3" marker-end="url(#arrowGreen)"/>
+  <text x="710" y="320" fill="#7ed9a3" font-size="14" font-family="Arial, sans-serif" font-weight="700">id</text>
+  
+  <!-- MLP path (curved pastel purple arrow) labeled "MLP residual" -->
+  <path d="M 690,375 Q 600,310 690,272" stroke="#c5a3d9" stroke-width="3.5" fill="none" marker-end="url(#arrowPurple)"/>
+  <text x="585" y="315" fill="#c5a3d9" font-size="13" font-family="Arial, sans-serif" font-weight="700">MLP</text>
+  <text x="570" y="332" fill="#c5a3d9" font-size="13" font-family="Arial, sans-serif" font-weight="700">residual</text>
+  
+  <!-- Labels -->
+  <!-- Layer labels -->
+  <text x="70" y="605" fill="#bbb" font-size="18" font-family="Arial, sans-serif" font-weight="600">l=0</text>
+  <text x="70" y="255" fill="#bbb" font-size="18" font-family="Arial, sans-serif" font-weight="600">l=1</text>
+  
+  <!-- Token labels -->
+  <text x="150" y="690" fill="#888" font-size="16" font-family="Arial, sans-serif" text-anchor="middle">t=1</text>
+  <text x="330" y="690" fill="#888" font-size="16" font-family="Arial, sans-serif" text-anchor="middle">t=2</text>
+  <text x="510" y="690" fill="#888" font-size="16" font-family="Arial, sans-serif" text-anchor="middle">t=3</text>
+  <text x="690" y="690" fill="#888" font-size="16" font-family="Arial, sans-serif" text-anchor="middle">t=4</text>
+  <text x="870" y="690" fill="#888" font-size="16" font-family="Arial, sans-serif" text-anchor="middle">t=5</text>
+  
+  <!-- Annotation boxes -->
+  <!-- QK Circuit annotation -->
+  <g transform="translate(1100, 550)">
+    <rect x="0" y="0" width="240" height="55" fill="#2a2a2a" stroke="#a8c5f7" stroke-width="2" rx="6"/>
+    <text x="120" y="22" fill="#a8c5f7" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">QK Circuit</text>
+    <text x="120" y="40" fill="#c5d9f7" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">Attention Pattern</text>
+  </g>
+  
+  <!-- OV Circuit annotation -->
+  <g transform="translate(1100, 620)">
+    <rect x="0" y="0" width="240" height="55" fill="#2a2a2a" stroke="#ffb380" stroke-width="2" rx="6"/>
+    <text x="120" y="22" fill="#ffb380" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">OV Circuit</text>
+    <text x="120" y="40" fill="#ffd4b3" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">Value Aggregation</text>
+  </g>
+  
+  <!-- Residual Stream annotation -->
+  <g transform="translate(1100, 350)">
+    <rect x="0" y="0" width="240" height="55" fill="#2a2a2a" stroke="#7ed9a3" stroke-width="2" rx="6"/>
+    <text x="120" y="22" fill="#7ed9a3" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Residual Stream</text>
+    <text x="120" y="40" fill="#a8e8c3" font-size="13" font-family="Arial, sans-serif" text-anchor="middle">x<tspan baseline-shift="sub" font-size="10">i</tspan> + Δ</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="450" y="40" fill="#ddd" font-size="28" font-family="Arial, sans-serif" font-weight="700">Attention: QK and OV Circuits</text>
+  
+  <!-- Current node labels -->
+  <text x="690" y="638" fill="#ffd700" font-size="12" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">(current)</text>
+  <text x="870" y="223" fill="#ffd700" font-size="12" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">(current)</text>
+</svg>
