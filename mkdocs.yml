@@ -46,4 +46,4 @@ extra_css:
 nav:
   - Home: index.md
   - Series:
-    - Efficient Attention (Draft): series/efficient-attention.md
+    - Transformer Internals: series/transformer_internals.md
