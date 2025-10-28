@@ -136,9 +136,9 @@ We can frame the two core operations within a layer as follows:
 
 $$
 \begin{aligned}
-&\text{# Attention: collaboration step — pull from previous actors} \\
+&\text{# Attention: collaboration step, pull from previous actors} \\
 &z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\[1em]
-&\text{# MLP: solo step — compute locally} \\
+&\text{# MLP: solo step, compute locally} \\
 &x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
 \end{aligned}
 $$
@@ -202,7 +202,7 @@ These questions correspond directly to the roles played by keys, queries, and va
 * <span class="term">Value ($v_u$)</span>: each earlier actor also emits a value vector containing the actual
   <span class="idea">information payload</span> it provides if we select it.
 
-* We use our query to score the relevance of each of the $t$ keys $k_1, k_2, \ldots, k_t$, and construct a
+* We use our query to score the relevance of each key, and construct a
   <span class="idea">weighted average</span> of the associated values.
 
 In pseudocode:
@@ -227,16 +227,15 @@ $$
 (Note that this pseudocode is pedagogical; in practice, these computations are implemented in parallel.)
 
 
-
-![QK Image](../img/post0/qk.svg)
-
 ### 4.2 Takeaways for Interpretability
 Below are a few important implications of the attention mechanism on how information flows through
 a transformer model. 
 
+![QK Image](../img/post0/qk.svg)
+
 <span class="idea">Separation of Concerns:</span> queries and keys decide <span class="idea">where
 to read</span>; values and $W_O$ determine <span class="idea">what to write</span>. In
-interpretability terms, this separation is described as <span class="term">QK and OV circuits</span>. 
+interpretability terms, this separation is described as <span class="term">QK and OV circuits</span>, which are depicted visually in the figure above. 
 
 <span class="idea">Linearity Modulo Attention Pattern:</span> the only source of nonlinearity comes from the softmax operation, which is part of the QK circuit
 (determining the attention pattern). If we fix the attention pattern, the entire attention operation
@@ -253,8 +252,7 @@ nodes $u \le t$. Each node $t$ involves:
 * Computing $t$ dot products between query and keys: $\mathcal{O}(tD)$  
 * Weighted sum of $t$ value vectors: $\mathcal{O}(tD)$
 
-So the actor at node $t$ does $\mathcal{O}(D^2 + tD)$ work. Summing across all nodes, the total work
-is:
+So the actor at node $t$ does $\mathcal{O}(D^2 + tD)$ work. Summing across nodes, the total work is:
 
 $$
 \begin{aligned}
@@ -266,10 +264,9 @@ $$
 $$
 
 Intuitively, this quadratic scaling in $T$ makes sense: each residual actor does work proportional
-to the index of its node in the sequence. The average workload grows linearly with sequence length,
-and we have $T$ actors, yielding $\mathcal{O}(T^2D)$ total complexity.
+to its index in the sequence, a typical hallmark of quadratic algorithms.
 
-As a first approximation, this $\mathcal{O}(T^2D)$ complexity is the central bottleneck in scaling
+As a first approximation, the $\mathcal{O}(T^2D)$ complexity is the central bottleneck in scaling
 transformers to long contexts, and much of the attention variant literature aims to attack this
 term. (We'll discuss some nuances to this picture shortly.)
 
@@ -286,14 +283,15 @@ length, before Noam Shazeer pointed out that $D$ was significantly larger than $
 ~70 in their context! It's striking to hear because in under a decade we've gone from translating sentences to pushing models to reason over corpora of millions of tokens!
 
 Another important detail to keep in mind when discussing the complexity of attention is that
-attention is highly parallel, so actual wall-clock time differs significantly from raw FLOP counts.
-An interesting lens for thinking about complexity in a world of increasing compute is: what is the complexity of an algorithm in the limit of infinite parallel compute? For a fascinating deep dive on this, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
+attention is highly parallel, so actual wall-clock time and raw FLOP counts are two different
+things. An interesting frame for thinking about complexity in a world of increasing compute is:
+what is the complexity of an algorithm in the limit of infinite parallel compute? For a fascinating deep dive on this, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
 
 Finally, as a personal aside, a pet peeve of mine is when the complexity of attention is written as
 $\mathcal{O}(T^2)$, silently treating the embedding dimension as a constant. This is problematic for
 two reasons. First, the embedding dimension is in the thousands for frontier models, so it's not
-exactly a small constant. Second, a sparse attention algorithm that actually addressed the $D$ term
-and reduced complexity to say, $\mathcal{O}(T^2 \log D)$, could still represent a meaningful advance
+exactly a small constant. Second, an attention algorithm that actually addressed the $D$ term and
+reduced complexity to say, $\mathcal{O}(T^2 \log D)$, could still represent a meaningful advance
 despite still being quadratic in $T$.
 
 ---
@@ -441,33 +439,32 @@ methods here.
 
 <span class="term">Receptive Field</span>
 
-Let's also make the notion of "preserving information flow" more concrete. We'll define the
-<span class="term">receptive field</span> of node $(t, l)$ as the set of input
+Let's also make the notion of "preserving information flow" more concrete. The
+<span class="term">receptive field</span> of node $(t, l)$ is the set of input
 tokens that this node can "see" through the network. More formally, it is the set of indices $i$ such that there exists a path in the information flow graph from node $(i, 0)$ to node $(t, l)$.
 
 In ordinary attention, the node $(t, l)$ can "see" all tokens from 1 through $t$, 
-because it receives information from all previous streams, so the receptive field is the full set
-$\{1, \ldots, t\}$. As we shrink neighborhoods, we will also shrink the receptive fields of some tokens. Thus, there is a tradeoff between neighborhood size and receptive field: smaller
-neighborhoods yield lower attention cost, but also lower receptive field. 
+because it receives information from all previous streams. As we shrink neighborhoods, some
+receptive fields will be impacted. Thus, there is a tradeoff between neighborhood size and receptive field: smaller neighborhoods yield lower attention cost, but also lower receptive field.
+
+While not a perfect quantification of "information flow," measuring receptive fields is a good
+"bare minimum" heuristic, as it places lower bounds on how many layers it takes for information to
+propagate across a context window.
 
 
 ### 8.2 Sliding Window Attention
-In Sliding Window Attention, each actor attends only to its $w$ most recent neighbors. In symbols:
+In Sliding Window Attention (SWA), each actor attends only to its $w$ most recent neighbors. In symbols:
 
 $$
 N(t, l) = \{ (\max(1,\, t - w + 1),\, l),\, \ldots,\, (t,\, l) \}
 $$
 
 
-
-
-
-
 ![Sliding-Window](../img/post0/sliding-window.svg)
 
 **Time Complexity**
 
-As we've established, since the neighborhood size is fixed to $w$, the time complexity of attention
+As we've established, since the neighborhood size is fixed to $w$, the time complexity of SWA
 will be $\mathcal{O}(TD^2 + DTw)$
 
 **Receptive Field**
@@ -477,14 +474,12 @@ the receptive field extends by an additional $w-1$ positions, giving <span class
 the size of the receptive field of $(t, l)$ is $\mathcal{O}(lw)$. Put another way, we need $O(T/w)$
 layers to ensure the last stream receives information from the first token.
 
-Sliding window attention thus gives us about a $T/w$ complexity saving over ordinary attention, 
-but at the cost of needing about $T/w$ layers for information to propagate over the entire 
-sequence. This is not great for long contexts, and so when sliding window attention is used in
-practice, it's typically used in conjunction with ordinary attention (e.g. alternating layers, as in GPT-OSS), as opposed to fully replacing it. 
+SWA thus gives us about a $T/w$ complexity saving, albeit at the cost of
+needing about $T/w$ layers for full-sequence information propagation. This is not great for long
+contexts, and so when SWA is used in practice, it's typically used in conjunction with ordinary attention (e.g. alternating layers, as in GPT-OSS), as opposed to fully replacing it. 
 
-A natural question to ask is: can we do better? That is, can we achieve a $T/w$ complexity saving,
-while growing receptive field faster than linearly in depth? The answer is yes: methods such as
-dilated attention and logarithmic attention are elegant ways of achieving exponentially growing
+A natural question to ask is: can we do better, i.e. achieve a $T/w$ complexity saving with faster
+than linear receptive field growth? The answer is yes: methods such as dilated attention and logarithmic attention achieve exponentially growing
 receptive fields. Below we present logarithmic attention; the intuition for dilated attention is
 fairly similar.
 
@@ -592,9 +587,8 @@ original nodes broadcast to and receive from. The resulting structure is a <span
 
 <span class="term">Sparse Memory Layers and Continual Learning:</span> while we've focused on attention, the graph lens and the sparsity theme extend to emerging ideas
 for improving or replacing MLPs. Recent work on sparse memory layers (like Meta's continual
-learning via sparse memory finetuning) replaces dense MLPs with sparse, addressable memory that
-can be selectively updated. This enables models to acquire new knowledge without catastrophic forgetting, a longstanding challenge in continual learning.
+learning via sparse memory finetuning) replaces dense MLPs with sparse, selectively updateable memory, enabling models to acquire new knowledge without catastrophic forgetting, a longstanding challenge in AI.
 
 The core takeaway we hope to leave readers with is: reasoning about transformers through their information flow graphs - analyzing topology, dynamics, and routing mechanisms - provides a 
-unifying language for understanding the landscape of modern architectures, from attention variants
+unifying lens for understanding the landscape of modern architectures, from attention variants
 to memory systems to continual learning.
