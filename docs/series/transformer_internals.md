@@ -134,10 +134,10 @@ We can frame the two core operations within a layer as follows:
 ```math
 \begin{aligned}
 &\texttt{# Attention: collaboration step - pull from previous actors at the same layer} \\
-& z_{t,l} = x_{t,l} + \operatorname{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
+& z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
 \\
 &\texttt{# MLP: solo step - compute locally on the post-attention state} \\
-& x_{t,l+1} = z_{t,l} + \operatorname{MLP}(z_{t,l})
+& x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
 \end{aligned}
 ```
 
@@ -299,7 +299,7 @@ In pseudocode:
 &\texttt{# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
 &\texttt{# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
 \\
-& h_t = \operatorname{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{# concatenate head outputs} \\
+& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{# concatenate head outputs} \\
 & z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{# project and add to residual stream}
 \end{aligned}
 ```
@@ -346,8 +346,10 @@ many distinct paths can information take from one residual stream state $(t_1, l
 $(t_2, l_2)$? 
 
 Recall that information moves through the graph by alternating between two types of edges:
-* <span class="term">Horizontal moves</span> (attention): $(u, l) \to (t, l)$ where $u < t$
-* <span class="term">Vertical moves</span> (residual): $(t, l) \to (t, l+1)$
+
+<span class="term">Horizontal moves</span> (attention): $(u, l) \to (t, l)$ where $u < t$
+
+<span class="term">Vertical moves</span> (residual): $(t, l) \to (t, l+1)$
 
 Let's look at a simple case. In how many ways can we travel from the first stream in one layer to the
 last stream in the next layer, i.e. from $(1, l)$ to $(T, l+1)$?
@@ -385,7 +387,7 @@ do we really need every attention edge? Can we instead prune most edges while st
 good connectivity - that is, ensuring information can still flow from any stream to any other stream within reasonable depth?
 
 This section explores exactly this idea. We'll start by introducing some terminology to make these
-notions precise, and then show how the frame of <span class="term">static graph sparsification<span> 
+notions precise, and then show how the frame of <span class="term">static graph sparsification</span> 
 unifies several efficient attention variants.
 
 ### 8.1 Terminology
