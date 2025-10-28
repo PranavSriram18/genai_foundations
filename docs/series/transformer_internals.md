@@ -135,10 +135,12 @@ We can frame the two core operations within a layer as follows:
 
 
 $$
-\text{# Attention: collaboration step — pull from previous actors} \\\\
-z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\\\
-\text{# MLP: solo step — compute locally} \\\\
-x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
+\begin{aligned}
+&\text{# Attention: collaboration step — pull from previous actors} \\
+&z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\
+&\text{# MLP: solo step — compute locally} \\
+&x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
+\end{aligned}
 $$
 
 
@@ -206,16 +208,18 @@ These questions correspond directly to the roles played by keys, queries, and va
 In pseudocode:
 
 $$
-\text{# score each key by dotting with the query} \\\\
-\text{for } u \text{ in range}(1, t{+}1)\text{:} \\\\
-\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\\\[6pt]
-\text{# normalize via softmax} \\\\
-\text{for } u \le t\text{:} \\\\
-\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\\\[6pt]
-\text{# weighted average of values} \\\\
-h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\\\[6pt]
-\text{# project and add to residual stream} \\\\
-z_{t,l} = x_{t,l} + W_O h_t
+\begin{aligned}
+&\text{# score each key by dotting with the query} \\
+&\text{for } u \text{ in range}(1, t{+}1)\text{:} \\
+&\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\[6pt]
+&\text{# normalize via softmax} \\
+&\text{for } u \le t\text{:} \\
+&\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\[6pt]
+&\text{# weighted average of values} \\
+&h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\[6pt]
+&\text{# project and add to residual stream} \\
+&z_{t,l} = x_{t,l} + W_O h_t
+\end{aligned}
 $$
 
 
@@ -253,10 +257,12 @@ So the actor at node $t$ does $\mathcal{O}(D^2 + tD)$ work. Summing across all n
 is:
 
 $$
-\sum_{t=1}^T \mathcal{O}(D^2 + tD) \\
-  = \mathcal{O}(TD^2) + \mathcal{O}\left(D \sum_{t=1}^T t\right) \\
-  = \mathcal{O}(TD^2) + \mathcal{O}(T^2D) \\
-  = \mathcal{O}(T^2D) \quad \text{for } T > D.
+\begin{aligned}
+&\sum_{t=1}^T \mathcal{O}(D^2 + tD) \\
+&\quad = \mathcal{O}(TD^2) + \mathcal{O}\left(D \sum_{t=1}^T t\right) \\
+&\quad = \mathcal{O}(TD^2) + \mathcal{O}(T^2D) \\
+&\quad = \mathcal{O}(T^2D) \quad \text{for } T > D.
+\end{aligned}
 $$
 
 Intuitively, this quadratic scaling in $T$ makes sense: each residual actor does work proportional
@@ -303,11 +309,13 @@ In pseudocode:
 
 <div>
 $$
-\text{# concat-then-project formulation} \\\\
-\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\\\
-\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\\\
-h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\\\
-z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
+\begin{aligned}
+&\text{# concat-then-project formulation} \\
+&\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\
+&\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\
+&h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\
+&z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
+\end{aligned}
 $$
 </div>
 
@@ -317,9 +325,11 @@ to summing linear projections applied to the individual slices.
 
 <div>
 $$
-\text{# equivalent independent-adds formulation} \\\\
-\text{# } W_O^h \text{ is the slice of } W_O \text{ corresponding to head } h \\\\
-z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
+\begin{aligned}
+&\text{# equivalent independent-adds formulation} \\
+&\text{# } W_O^h \text{ is the slice of } W_O \text{ corresponding to head } h \\
+&z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
+\end{aligned}
 $$
 </div>
 
