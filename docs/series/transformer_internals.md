@@ -228,8 +228,9 @@ $$
 
 
 
-(Note that this pseudocode is pedagogical; in practice, these computations are implemented in
-parallel.)
+(Note that this pseudocode is pedagogical; in practice, these computations are implemented in parallel.)
+
+
 
 ![QK Image](../img/post0/qk.svg)
 
@@ -309,15 +310,14 @@ being added to the residual stream.
 In pseudocode:
 
 $$
-\begin{alignedat}{2}
-&\texttt{\# concat-then-project formulation} \\
-&\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
-&\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+\texttt{\# concat-then-project formulation} \\
+\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
+\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
 \\
-& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
-& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
-\end{alignedat}
+h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
+z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
 $$
+
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
