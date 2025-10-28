@@ -226,7 +226,7 @@ $$
 $$
 
 
-### 4.2 Interpretability Takeaways: QK and OV circuits
+### 4.2 Interpretability Takeaways: QK and OV Circuits
 Below are a few important implications of the attention mechanism on how information flows through
 a transformer model. 
 
