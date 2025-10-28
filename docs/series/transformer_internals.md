@@ -67,7 +67,7 @@ by $w_1, \ldots, w_T$, and use $x_{t,l}$ to denote the representation of token $
 layer $l$. We use 1-indexing for tokens and 0-indexing for layers; $x_{t,0}$ denotes the
 representation of the $t$th token entering the layer 0 (i.e. after token embedding and positional embedding).
 Key terms are highlighted in <span class="term">blue</span> and key insights in <span class="idea">green</span>. 
-
+(Hence, a good way to skim this article is to simply <span class="idea">follow the colored words</span>.)
 ---
 
 ## 3. The Transformer as a Grid of Information Flow
@@ -277,8 +277,8 @@ As a first approximation, the $\mathcal{O}(T^2D)$ complexity is the central bott
 transformers to long contexts, and much of the attention variant literature aims to attack this
 term. (We'll discuss some nuances to this picture shortly.)
 
-An important thing to note is that both the QK and OV circuits contribute to this quadratic cost:
-each stream’s linear work stems from two sources: scoring all previous keys (QK circuit) and summing
+An important observation is that both the QK and OV circuits contribute to this quadratic cost:
+each stream’s linear work stems both scoring all previous keys (QK circuit) and summing
 all corresponding values (OV circuit). Thus, <span class="idea">any attempt to break the quadratic
 barrier must address both QK and OV circuits</span>. 
 
@@ -289,10 +289,10 @@ Transformer paper, Łukasz Kaiser recalled being nervous about the cost being qu
 length, before Noam Shazeer pointed out that $D$ was significantly larger than $T$. Their application was language translation of sentences, so T was just
 ~70 in their context! It's striking to hear because in under a decade we've gone from translating sentences to pushing models to reason over corpora of millions of tokens!
 
-Another important detail when discussing complexity is that attention is highly parallel, so actual
-wall-clock time and raw FLOP counts are two different things. An interesting frame for thinking
-about complexity in a world of increasing compute is: what is the complexity of an algorithm in the
-limit of infinite parallel compute? For a fascinating deep dive on this, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
+Another important detail when discussing complexity is that attention is highly parallel, so
+wall-clock time and raw FLOP counts are two different things. An interesting frame in a world of
+increasing compute is: what is the complexity of an algorithm in the limit of infinite parallel
+compute? For a fascinating deep dive, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
 
 Finally, as a personal aside, a pet peeve of mine is when the complexity of attention is written as
 $\mathcal{O}(T^2)$, silently treating the embedding dimension as a constant. This is problematic for
@@ -391,8 +391,8 @@ paths from the first token to the final stream.
 More generally, any path from $(t, l)$ to $(t + p, l + q)$ requires $q$ vertical moves and a total
 horizontal displacement of $p$. The number of ways to arrange these moves is the binomial
 coefficient $\binom{p+q}{p}$. By [Stirling's approximation](https://en.wikipedia.org/wiki/Stirling%27s_approximation),
-this grows exponentially with $min(p, q)$. Hence, as we scale context length and depth, the number of
-information pathways quickly becomes astronomical. 
+this grows exponentially with $min(p, q)$. Hence, as we scale context length and depth,
+<span class="idea">the number of information pathways quickly becomes astronomical</span>. 
 
 This combinatorial explosion suggests possible redundancy. We need information to be able to flow
 across the context window, but with so many paths available, could we get away with removing some
@@ -408,15 +408,15 @@ Let's briefly review what we've established so far.
 We've framed Transformers as defining information flow through a grid graph, where attention edges
 enable communication between streams. In Section 7, we observed that the number of paths in this
 graph from an input token to another node grows exponentially, prompting the following question: 
-can we prune most edges while still maintaining good connectivity - that is, ensuring information
-can still flow from across a context window within reasonable depth?
+<span class="idea">can we prune most edges while still maintaining good connectivity</span> - that
+is, ensuring information can still flow from across a context window within reasonable depth?
 
 This section explores exactly this idea. We'll start by introducing some terminology to make these
 notions precise, and then show how the frame of <span class="term">static graph sparsification</span> 
 unifies several efficient attention variants.
 
 ### 8.1 Terminology
-<span class="term">Neighborhoods</span>
+**Neighborhoods**
 
 Define $N(t, l)$ as the <span class="term">attention neighborhood</span> of node $(t, l)$: that is,
 the set of nodes that the actor at $(t, l)$ can attend to. In ordinary attention, we have
@@ -426,14 +426,14 @@ We'll see that a large number of efficient attention mechanisms boil down to sim
 in different ways. In particular, these mechanisms <span class="idea">shrink</span> the neighborhood
 to some subset of the full ordinary neighborhood. Why does this help? 
 
-<span class="idea">Observation</idea>: if we fix neighborhood size to some constant $w$, the time
-complexity of generating $T$ tokens is $\mathcal{O}(TD^2 + TDw) = \mathcal{O}(TDw)$, assuming the
-second term still dominates. This is a factor of $T/w$ saving over ordinary attention.
+<span class="idea">Observation: if we fix neighborhood size to some constant $w$, the time
+complexity of generating $T$ tokens is $\mathcal{O}(TD^2 + TDw) = \mathcal{O}(TDw)$</span>, assuming
+the second term still dominates. This is a factor of $T/w$ saving over ordinary attention.
 
 The reasoning mirrors that in Section 5: both the query-key scoring and value-aggregation steps now
 cost $\mathcal{O}(wD)$ per token instead of $\mathcal{O}(tD)$.
 
-<span class="term">Static vs Dynamic Sparsification</span>
+**Static vs Dynamic Sparsification**
 
 The term <span class="term">sparsification</span> in graph theory refers to removing some set of edges. To shrink 
 neighborhoods is to sparsify the underlying information flow graph. This sparsification is
@@ -442,7 +442,7 @@ sparsity, by contrast, refers to techniques in which we remove edges based on th
 sequence being processed. We'll explore dynamic sparsity in future articles, and stick to static
 methods here.
 
-<span class="term">Receptive Field</span>
+**Receptive Fields**
 
 Let's also make the notion of "preserving information flow" more concrete. The
 <span class="term">receptive field</span> of node $(t, l)$ is the set of input
@@ -460,7 +460,8 @@ information propagation across a context window.
 
 
 ### 8.2 Sliding Window Attention
-In Sliding Window Attention (SWA), each actor attends only to its $w$ most recent neighbors. In symbols:
+In <span class="term">Sliding Window Attention (SWA)</span>, each actor attends only to its $w$ most
+recent neighbors. In symbols:
 
 $$
 N(t, l) = \{ (\max(1,\, t - w + 1),\, l),\, \ldots,\, (t,\, l) \}
@@ -478,12 +479,13 @@ will be $\mathcal{O}(TD^2 + DTw)$
 
 Consider node $(t, 0)$. It can only see the $w$ most recent tokens, i.e. tokens $t, t-1, \ldots, t-w+1$. If we go up a layer, the receptive field increases by $w-1$: $(t, 1)$ can see back up to $(t-w+1, 1)$, which in turn can see up to $(t-2*w+2, 0)$. Continuing in this manner, at each layer,
 the receptive field extends by an additional $w-1$ positions, so the size of the receptive field of
-$(t, l)$ is $\mathcal{O}(lw)$. Put another way, we need $O(T/w)$ layers to ensure the last stream
-receives information from the first token.
+$(t, l)$ is $\mathcal{O}(lw)$. Put another way, <span class="idea">we need $O(T/w)$ layers</span> to
+ensure the last stream receives information from the first token.
 
 SWA thus gives us about a $T/w$ complexity saving, albeit at the cost of
 needing about $T/w$ layers for full-sequence information propagation. This is not great for long
-contexts, and so when SWA is used in practice, it's typically used in conjunction with ordinary attention (e.g. alternating layers, as in GPT-OSS), as opposed to fully replacing it. 
+contexts, and so when SWA is used in practice, it's typically used in conjunction with ordinary attention
+(e.g. alternating layers, as in GPT-OSS), as opposed to fully replacing it.
 
 A natural question to ask is: can we do better, i.e. achieve a $T/w$ complexity saving with faster
 than linear receptive field growth? The answer is yes: methods such as dilated attention and logarithmic attention achieve exponentially growing
@@ -505,7 +507,7 @@ The neighborhood size is now upper bounded by $\log_{2}(T)$, implying a time com
 $\mathcal{O}(TD^2 + DT \log T)$. We have the following nice observation: 
 
 **Claim**: the receptive field of $(t, l)$ where $l > \log_{2}(t)$ is the full set $\{1, \ldots, t\}$.
-In other words, we achieve full information flow within $\log_{2}(t)$ layers. 
+In other words, <span class="idea">we achieve full information flow within $\log_{2}(t)$ layers</span>. 
 
 **Proof (sketch)**: First, observe that every attention edge in the graph connects nodes at a
 lateral distance of a power of 2. To move information from $(t, 1)$ to $(t + d, l)$, decompose $d$
@@ -544,7 +546,8 @@ where $N_{base}(t, l)$ is the neighborhood from whichever base sparsification
 method we're augmenting (e.g. sliding window).
 
 While we've motivated global tokens through the frame of connectivity preservation, they're often
-motivated by empirical findings about <span class="term">attention sinks</span>. Interestingly, the [graph lens](https://publish.obsidian.md/the-tensor-throne/Transformers+as+GNNs/Attention+sinks+from+the+graph+perspective) reveals a deep connection between these.
+motivated by empirical findings about <span class="term">attention sinks</span>. Interestingly, the
+[graph lens](https://publish.obsidian.md/the-tensor-throne/Transformers+as+GNNs/Attention+sinks+from+the+graph+perspective) reveals a deep connection between these.
 
 ### 8.6 Comparing Static Sparsification Methods
 The table below summarizes the static sparsification methods we've discussed. (RF here stands for
@@ -563,7 +566,9 @@ Interestingly, despite the theoretical advantages of logarithmic attention, dila
 stochastic masking, sliding window attention is much more commonly used in practice. One potential
 reason is that static sparsification in general may imbue the model with an imperfect
 structural prior, hurting generalization - an idea related to the [Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), and one we will explore in 
-more depth in a future article on dynamic sparsity. Nevertheless, understanding static sparsification is essential, as the ideas developed here form the basis of understanding more powerful dynamic sparsification methods.
+more depth in a future article on dynamic sparsity. Nevertheless, understanding static sparsification
+is essential, as the ideas developed here form the basis of understanding more powerful dynamic
+sparsification methods.
 
 ---
 
