@@ -135,17 +135,15 @@ We can frame the two core operations within a layer as follows:
 
 
 $$
-\begin{equation*}
-\hspace{0pt}
-\begin{alignedat}{2}
-&\texttt{\\# Attention: collaboration step — pull from previous actors at the same layer} \\
+\begin{aligned}
+&\texttt{\# Attention: collaboration step — pull from previous actors at the same layer} \\
 & z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, x_{2,l}, \ldots, x_{t,l}) \\
 \\
-&\texttt{\\# MLP: solo step — compute locally on the post-attention state} \\
+&\texttt{\# MLP: solo step — compute locally on the post-attention state} \\
 & x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
-\end{alignedat}
-\end{equation*}
+\end{aligned}
 $$
+
 
 
 With this framing, a single layer is implemented by multiple <span class="idea">collaborating actors</span>,
@@ -211,24 +209,21 @@ These questions correspond directly to the roles played by keys, queries, and va
 In pseudocode:
 
 $$
-\begin{equation*}
-\hspace{0pt}
 \begin{alignedat}{2}
-&\texttt{\\# score each key by dotting with the query} \\
+&\texttt{\# score each key by dotting with the query} \\
 &\texttt{for } u \texttt{ in range}(1, t{+}1)\texttt{:} \\
 &\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\
 \\
-&\texttt{\\# normalize via softmax} \\
+&\texttt{\# normalize via softmax} \\
 &\texttt{for } u \le t\texttt{:} \\
 &\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\
 \\
-&\texttt{\\# weighted average of values} \\
+&\texttt{\# weighted average of values} \\
 & h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\
 \\
-&\texttt{\\# project and add to residual stream} \\
+&\texttt{\# project and add to residual stream} \\
 & z_{t,l} = x_{t,l} + W_O h_t
 \end{alignedat}
-\end{equation*}
 $$
 
 
@@ -311,35 +306,30 @@ keys, queries, and values are sliced along the embedding dimension, heads perfor
 independently on their slices, the results are concatenated and then projected using $W_O$ before
 being added to the residual stream.
 
-**In pseudocode:**
+In pseudocode:
 
 $$
-\begin{equation*}
-\hspace{0pt}
 \begin{alignedat}{2}
-&\texttt{\\# concat-then-project formulation} \\
-&\texttt{\\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
-&\texttt{\\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
+&\texttt{\# concat-then-project formulation} \\
+&\texttt{\# Let } h_t^1, h_t^2, \ldots, h_t^H \texttt{ denote the outputs from each of H heads} \\
+&\texttt{\# (each is a weighted average of values from that head, of dimension } D/H \texttt{)} \\
 \\
-& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\\# concatenate head outputs} \\
-& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\\# project and add to residual stream}
+& h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \texttt{\# concatenate head outputs} \\
+& z_{t,l} = x_{t,l} + W_O h_t \quad \texttt{\# project and add to residual stream}
 \end{alignedat}
-\end{equation*}
 $$
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
 
 $$
-\begin{equation*}
-\hspace{0pt}
 \begin{alignedat}{2}
-&\texttt{\\# equivalent independent-adds formulation} \\
-&\texttt{\\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
-& z_{t,l} = x_{t,l} + \sum_h (W_O^h h_t^h)
+&\texttt{\# equivalent independent-adds formulation} \\
+&\texttt{\# } W_O^h \texttt{ is the slice of } W_O \texttt{ corresponding to head } h \\
+& z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
 \end{alignedat}
-\end{equation*}
 $$
+
 
 
 With the latter formulation, we see that each head writes <span class="idea">independently and
@@ -387,6 +377,7 @@ the last stream in the next layer, i.e. from $(1, l)$ to $(T, l+1)$?
 ![Combinatorics Figure](../img/post0/combinatorics-figure.svg)
 
 There are three categories of paths in this case: 
+
 * All the way right, then up: $(1, l) \to (T, l) \to (T, l+1)$
 * Up, then all the way right: $(1, l) \to (1, l+1) \to (T, l+1)$
 * Part way right, up, rest of the way right: $(1, l) \to (k, l) \to (k, l+1) \to (T, l+1)$
