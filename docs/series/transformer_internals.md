@@ -109,7 +109,7 @@ through the model.
 Given a sequence of input tokens $w_1, \ldots, w_T$, focus on how a single token $w_t$ flows through
 its residual stream. 
 
-1. The token enters its stream as the sum of its word <span class="term">**embedding vector**</span> $e_t$ and
+1. The token enters its stream as the sum of its word <span class="term">**embedding vector**</span>$e_t$ and
    <span class="term">**positional embedding**</span> $p_t$. 
 
 2. Each layer computes an update that is <span class="idea">added</span> to the stream - hence the term
