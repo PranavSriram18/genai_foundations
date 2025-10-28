@@ -129,15 +129,15 @@ associated with each residual stream within a layer, which we'll call a "residua
 
 We can frame the two core operations within a layer as follows:
 
-* Attention as <span class="idea">*communication*</span> - specifically, actors pulling information from previous actors.
+* Attention as <span class="idea">communication</span> - specifically, actors pulling information from previous actors.
 
-* MLP as solo computation - actors individually performing computation on their own post-attention state.
+* MLP as <span class="idea">solo computation</span> - actors individually performing computation on their own post-attention state.
 
 
 $$
 \begin{aligned}
 &\text{# Attention: collaboration step — pull from previous actors} \\
-&z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\ \\
+&z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\[1em]
 &\text{# MLP: solo step — compute locally} \\
 &x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
 \end{aligned}
@@ -155,7 +155,7 @@ the $t$-th residual stream, the model needs to predict the $t+1$-th token $w_{t+
 it also has a secondary goal: compute information useful for those future actors.
 
 This framing provides a first-principles view of how models trained for next-token prediction can
-actually plan ahead, a phenomenon verified empirically in [work by Anthropic](https://www.anthropic.com/research/tracing-thoughts-language-model).
+actually <span class="idea">plan ahead</span>, a phenomenon verified empirically in [work by Anthropic](https://www.anthropic.com/research/tracing-thoughts-language-model).
 
 ### 3.5 The grid as a graph
 
@@ -213,7 +213,7 @@ $$
 &\text{for } u \text{ in range}(1, t{+}1)\text{:} \\
 &\quad \mathrm{score}_{t,u} = q_t^{\mathrm{T}} k_u \\[6pt]
 &\text{# normalize via softmax} \\
-&\text{for } u \le t\text{:} \\
+&\text{for } u \text{ in range}(1, t{+}1)\text{:} \\
 &\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\[6pt]
 &\text{# weighted average of values} \\
 &h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\[6pt]
@@ -282,7 +282,7 @@ barrier must address both QK and OV circuits</span>.
 
 Interestingly, in a [talk](https://www.youtube.com/watch?v=rBCqOTEfxvg&t=1080s) shortly after the original
 Transformer paper, Łukasz Kaiser recalled being nervous about the cost being quadratic in context
-length, before Noam Shazeer pointed out that $D$ was significantly larger than $T$, so the $\mathcal{O}(T^2D)$ term wasn't the bottleneck. Their application was language translation of sentences, so T was just
+length, before Noam Shazeer pointed out that $D$ was significantly larger than $T$. Their application was language translation of sentences, so T was just
 ~70 in their context! It's striking to hear because in under a decade we've gone from translating sentences to pushing models to reason over corpora of millions of tokens!
 
 Another important detail to keep in mind when discussing the complexity of attention is that
@@ -311,7 +311,6 @@ $$
 \begin{aligned}
 &\text{# concat-then-project formulation} \\
 &\text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\
-&\text{# (each is a weighted average of values from that head, of dimension } D/H \text{)} \\
 &h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\
 &z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
 \end{aligned}
@@ -434,7 +433,7 @@ cost $\mathcal{O}(wD)$ per token instead of $\mathcal{O}(tD)$.
 <span class="term">Static vs Dynamic Sparsification</span>
 
 The term <span class="term">sparsification</span> in graph theory refers to removing some set of edges. To shrink 
-neighborhoods from the full set in ordinary attention is to <span class="term">sparsify</span> the underlying
+neighborhoods from the full set in ordinary attention is to sparsify the underlying
 information flow graph. This sparsification is <span class="term">static</span> because we do it once upfront. <span class="term">Dynamic</span>
 sparsity, by contrast, refers to techniques in which we remove edges based on the content of the
 sequence being processed. We'll explore dynamic sparsity in future articles, and stick to static
@@ -493,7 +492,7 @@ fairly similar.
 Instead of looking at just the most recent nodes, consider what happens if we use an exponentially
 increasing jump size within a layer:
 
-$N(t, l) = \{ (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \}$,
+$N(t, l) = \{ (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \}$,<br>
 where $k = \lfloor \log_{2}(t) \rfloor$. 
 
 
@@ -581,10 +580,9 @@ pruning edges while preserving receptive fields. The graph lens makes their trad
 In future articles, we'll apply this same lens to more ideas from the research frontier:
 
 <span class="term">Dynamic Sparsification and Routing:</span> instead of committing to fixed 
-neighborhoods upfront, what if models dynamically select which edges matter based on content? We'll 
+neighborhoods upfront, what if models dynamically select $N(t, l)$ based on content? We'll 
 show how several efficient attention methods, from locality sensitive hashing in Reformer to 
-DeepSeek's recent "lightning indexer" can be understood as dynamic graph sparsification, where
-$N(t,l)$ becomes a function of the sequence being processed.
+DeepSeek's recent "lightning indexer" can be understood as dynamic graph sparsification.
 
 <span class="term">Kernelized Attention and Factor Graphs:</span> techniques like Performer, Linear 
 Transformer, and Linformer are typically understood through linear algebra: kernel approximations,
