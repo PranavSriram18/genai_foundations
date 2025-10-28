@@ -456,11 +456,9 @@ neighborhoods yield lower attention cost, but also lower receptive field.
 In Sliding Window Attention, each actor attends only to its $w$ most recent neighbors. In symbols:
 
 $$
-\begin{equation*}
-\hspace{0pt}
-N(t, l) = \\{ (\max(1,\, t - w + 1),\, l),\, \ldots,\, (t,\, l) \\}
-\end{equation*}
+N(t, l) = \{ (\max(1,\, t - w + 1),\, l),\, \ldots,\, (t,\, l) \}
 $$
+
 
 
 
@@ -492,7 +490,8 @@ receptive fields. Below we present logarithmic attention; the intuition for dila
 fairly similar.
 
 ### 8.3 Logarithmic Attention
-Instead of looking at just the most recent nodes, consider what happens if we use an exponentially increasing jump size within a layer:
+Instead of looking at just the most recent nodes, consider what happens if we use an exponentially
+increasing jump size within a layer:
 
 $N(t, l) = \textbraceleft (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \textbraceright$,
 where $k = \lfloor \log_{2}(t) \rfloor$. 
