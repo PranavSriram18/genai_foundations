@@ -94,10 +94,10 @@ these from all equations and descriptions for brevity, as they don't change our 
 **Columns as Residual Streams**
 
 A vertical column corresponds to a single token being processed across layers. We call the $t$-th
-column the <span class="term">residual stream</span> for token $t$, a term popularized in Anthropic's original
-[Transformer Circuits paper](https://transformer-circuits.pub/2021/framework/index.html). The diagram
-above depicts the residual stream for the third token, and how information can move forward from
-previous streams into this stream via causal attention.
+column the <span class="term">residual stream</span> for token $t$, a term popularized in Anthropic's
+original [Transformer Circuits paper](https://transformer-circuits.pub/2021/framework/index.html).
+The diagram above depicts the residual stream for the third token, and how information can move
+forward from previous streams into this stream via causal attention.
 
 A key frame we'll adopt is a shift from thinking about transformers as stacks of rows (layers),
 and instead as a <span class="idea">series of parallel columns</span>, i.e. residual streams. These
@@ -321,9 +321,9 @@ $$
 $$
 
 
-A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
-to summing linear projections applied to the individual slices. Let $$W_O^j$ be the slice of $W_O$
-corresponding to head $j$.
+A key linear-algebraic observation is: <span class="idea">concatenation followed by linear projection
+is equivalent to summing linear projections applied to the individual slices</span>. Let $$W_O^j$ be
+the slice of $W_O$ corresponding to head $j$.
 
 $$
 \begin{aligned}
@@ -473,24 +473,25 @@ $$
 **Time Complexity**
 
 As we've established, since the neighborhood size is fixed to $w$, the time complexity of SWA
-will be $\mathcal{O}(TD^2 + DTw)$
+will be $\mathcal{O}(TD^2 + DTw)$.
 
 **Receptive Field**
 
-Consider node $(t, 0)$. It can only see the $w$ most recent tokens, i.e. tokens $t, t-1, \ldots, t-w+1$. If we go up a layer, the receptive field increases by $w-1$: $(t, 1)$ can see back up to $(t-w+1, 1)$, which in turn can see up to $(t-2*w+2, 0)$. Continuing in this manner, at each layer,
-the receptive field extends by an additional $w-1$ positions, so the size of the receptive field of
-$(t, l)$ is $\mathcal{O}(lw)$. Put another way, <span class="idea">we need $O(T/w)$ layers</span> to
-ensure the last stream receives information from the first token.
+Consider node $(t, 0)$. It can only see the $w$ most recent tokens, i.e. tokens $t, t-1, \ldots, t-w+1$.
+If we go up a layer, the receptive field increases by $w-1$: $(t, 1)$ can see back up to $(t-w+1, 1)$,
+which in turn can see up to $(t-2*w+2, 0)$. At each layer, the receptive field extends by an additional
+$w-1$ positions, so the receptive field size of $(t, l)$ is $\mathcal{O}(lw)$. Put another way,
+<span class="idea">we need $O(T/w)$ layers</span> to ensure the last stream receives information from
+the first token.
 
-SWA thus gives us about a $T/w$ complexity saving, albeit at the cost of
-needing about $T/w$ layers for full-sequence information propagation. This is not great for long
-contexts, and so when SWA is used in practice, it's typically used in conjunction with ordinary attention
-(e.g. alternating layers, as in GPT-OSS), as opposed to fully replacing it.
+SWA thus gives us about a $T/w$ complexity saving, albeit at the cost of needing about $T/w$ layers
+for full-sequence information propagation. This is not great for long contexts, and in practice, SWA
+is typically used in conjunction with ordinary attention (e.g. alternating layers, as in GPT-OSS),
+as opposed to fully replacing it.
 
-A natural question to ask is: can we do better, i.e. achieve a $T/w$ complexity saving with faster
-than linear receptive field growth? The answer is yes: methods such as dilated attention and logarithmic attention achieve exponentially growing
-receptive fields. Below we present logarithmic attention; the intuition for dilated attention is
-fairly similar.
+It turns out we can do better: methods such as <span class="term">dilated attention</span> and
+<span class="term">logarithmic attention</idea> achieve exponentially growing receptive fields.
+Below we present logarithmic attention; the intuition for dilated attention is fairly similar.
 
 ### 8.3 Logarithmic Attention
 Instead of looking at just the most recent nodes, consider what happens if we use an exponentially
