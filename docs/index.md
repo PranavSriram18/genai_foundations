@@ -1,4 +1,4 @@
-# Transformer Notes
+# Generative AI Foundations
 
 This site hosts my long-form technical essays on Transformers, efficient attention, and related
 topics.
