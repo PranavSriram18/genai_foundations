@@ -174,8 +174,8 @@ earlier to later streams.
 (Note: technically there is also an edge from each node to itself. We omit these from diagrams and
 from wording like "earlier to later" for brevity.)
 
-In this view, a transformer is a two-dimensional graph of collaborating actors, passing information
-forward in time through attention, and upwards in depth through residual updates.
+In this view, a transformer is a <span class="idea">two-dimensional graph of collaborating actors,
+passing information forward in time through attention, and upwards in depth through residual updates</span>.
 
 ---
 
