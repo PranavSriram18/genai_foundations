@@ -304,6 +304,7 @@ being added to the residual stream.
 
 In pseudocode:
 
+<div>
 $$
 \text{# concat-then-project formulation} \\\\
 \text{# Let } h_t^1, h_t^2, \ldots, h_t^H \text{ denote the outputs from each of H heads} \\\\
@@ -311,18 +312,19 @@ $$
 h_t = \mathrm{concat}(h_t^1, \ldots, h_t^H) \quad \text{# concatenate head outputs} \\\\
 z_{t,l} = x_{t,l} + W_O h_t \quad \text{# project and add to residual stream}
 $$
-
+</div>
 
 
 A key linear-algebraic observation is: concatenation followed by linear projection is equivalent  
 to summing linear projections applied to the individual slices.
 
+<div>
 $$
 \text{# equivalent independent-adds formulation} \\\\
 \text{# } W_O^h \text{ is the slice of } W_O \text{ corresponding to head } h \\\\
 z_{t,l} = x_{t,l} + \sum_h \left(W_O^h\, h_t^h\right)
 $$
-
+</div>
 
 
 
