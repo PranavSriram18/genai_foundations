@@ -137,7 +137,7 @@ We can frame the two core operations within a layer as follows:
 $$
 \begin{aligned}
 &\text{# Attention: collaboration step — pull from previous actors} \\
-&z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\
+&z_{t,l} = x_{t,l} + \mathrm{Attend}(x_{1,l}, \ldots, x_{t,l}) \\ \\
 &\text{# MLP: solo step — compute locally} \\
 &x_{t,l+1} = z_{t,l} + \mathrm{MLP}(z_{t,l})
 \end{aligned}
@@ -451,7 +451,8 @@ Let's also make the notion of "preserving information flow" more concrete. We'll
 tokens that this node can "see" through the network. More formally, it is the set of indices $i$ such that there exists a path in the information flow graph from node $(i, 0)$ to node $(t, l)$.
 
 In ordinary attention, the node $(t, l)$ can "see" all tokens from 1 through $t$, 
-because it receives information from all previous streams, so the receptive field is the full set $\\{1, \ldots, t\\}$. As we shrink neighborhoods, we will also shrink the receptive fields of some tokens. Thus, there is a tradeoff between neighborhood size and receptive field: smaller
+because it receives information from all previous streams, so the receptive field is the full set
+$\{1, \ldots, t\}$. As we shrink neighborhoods, we will also shrink the receptive fields of some tokens. Thus, there is a tradeoff between neighborhood size and receptive field: smaller
 neighborhoods yield lower attention cost, but also lower receptive field. 
 
 
@@ -496,7 +497,7 @@ fairly similar.
 Instead of looking at just the most recent nodes, consider what happens if we use an exponentially
 increasing jump size within a layer:
 
-$N(t, l) = \textbraceleft (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \textbraceright$,
+$N(t, l) = \{ (t, l), (t-1, l), (t-2, l), (t-4, l), (t-8, l), \ldots, (t - 2^k) \}$,
 where $k = \lfloor \log_{2}(t) \rfloor$. 
 
 
