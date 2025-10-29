@@ -283,9 +283,13 @@ length, before Noam Shazeer pointed out that $D$ was significantly larger than $
 ~70 in their context! It's striking to hear because in under a decade we've gone from translating sentences to pushing models to reason over corpora of millions of tokens!
 
 Another important detail when discussing complexity is that attention is highly parallel, so
-wall-clock time and raw FLOP counts are two different things. An interesting frame in a world of
-increasing compute is: what is the complexity of an algorithm in the limit of infinite parallel
-compute? For a fascinating deep dive, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
+wall-clock time and raw FLOP counts are entirely different things. Memory hierarchies, SIMD,
+inter-GPU communication, compiler optimizations, quantization, etc. further complicate the
+picture, and algorithms that account for hardware realities (like Flash Attention) are a possible
+subject for a future article.
+
+One interesting frame in a world of increasing compute is: what is the complexity of an
+algorithm in the limit of infinite parallel compute? For a fascinating deep dive, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
 
 Finally, as a personal aside, a pet peeve of mine is when the complexity of attention is written as
 $\mathcal{O}(T^2)$, silently treating the embedding dimension as a constant. This is problematic for
