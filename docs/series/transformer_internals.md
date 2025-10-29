@@ -282,7 +282,7 @@ Transformer paper, Łukasz Kaiser recalled being nervous about the cost being qu
 length, before Noam Shazeer pointed out that $D$ was significantly larger than $T$. Their application was language translation of sentences, so T was just
 ~70 in their context! It's striking to hear because in under a decade we've gone from translating sentences to pushing models to reason over corpora of millions of tokens!
 
-Another important detail when discussing complexity is that attention is highly parallel, so
+An important consideration in the complexity discussion is that attention is highly parallel, so
 wall-clock time and raw FLOP counts are entirely different things. Memory hierarchies, SIMD,
 inter-GPU communication, compiler optimizations, quantization, etc. further complicate the
 picture, and algorithms that account for hardware realities (like Flash Attention) are a possible
