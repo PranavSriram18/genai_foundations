@@ -189,9 +189,9 @@
   <line x1="690" y1="578" x2="690" y2="409" stroke="#7ed9a3" stroke-width="3" marker-end="url(#arrowGreen)"/>
   <text x="707" y="495" fill="#7ed9a3" font-size="14" font-family="Arial, sans-serif" font-weight="700">id</text>
   
-  <!-- Layer 0: Residual update to sum (PASTEL ORANGE arrow) labeled "residual" -->
+  <!-- Layer 0: Residual update to sum (PASTEL ORANGE arrow) labeled "W_O" -->
   <path d="M 666,510 Q 676,450 674,407" stroke="#ffb380" stroke-width="3" fill="none" marker-end="url(#arrowOrange)"/>
-  <text x="615" y="460" fill="#ffb380" font-size="13" font-family="Arial, sans-serif" font-weight="700">residual</text>
+  <text x="615" y="460" fill="#ffb380" font-size="13" font-family="Arial, sans-serif" font-weight="700">W_O</text>
   
   <!-- Layer 0: Sum to next layer: two arrows -->
   <!-- Identity path (straight pastel green arrow) labeled "id" -->

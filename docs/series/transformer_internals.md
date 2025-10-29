@@ -199,7 +199,7 @@ it <span class="idea">has</span> (<span class="term">key $k_{u,l}$</span>), and 
 a function of what we're looking for (our query $q_{t,l}$) and what previous actors' have to offer (their key $k_{u, l}$).
 
 The actual information we import is a weighted sum of previous actors' information payload
-(<span class="term">value vector $v_{u,l}$</span>), weighted by the relevance scores, and multiplied
+(<span class="term">value $v_{u,l}$</span>), weighted by the relevance scores, and multiplied
 by an output projection matrix <span class="term">$W_O$</span>.
 
 In pseudocode:
@@ -213,9 +213,9 @@ $$
 &\text{for } u \text{ in range}(1, t{+}1)\text{:} \\
 &\quad a_{t,u} = \exp(\mathrm{score}_{t,u}) \big/ \sum_{j \le t} \exp(\mathrm{score}_{t,j}) \\[6pt]
 &\text{# weighted average of values} \\
-&h_t = \sum_{u \le t} a_{t,u} \cdot v_u \\[6pt]
+&z_t = \sum_{u \le t} a_{t,u} \cdot v_u \\[6pt]
 &\text{# project and add to residual stream} \\
-&z_{t,l} = x_{t,l} + W_O h_t
+&h_{t,l} = x_{t,l} + W_O z_t
 \end{aligned}
 $$
 
