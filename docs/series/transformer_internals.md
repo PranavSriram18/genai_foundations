@@ -180,7 +180,8 @@ passing information forward in time through attention, and upwards in depth thro
 ---
 
 ## 4. Anatomy of Causal Attention
-We'll now briefly recap ordinary attention, before highlighting aspects particularly salient to the frames we're developing.
+We'll now briefly recap ordinary attention, before highlighting aspects particularly salient to the
+frames we're developing.
 
 ### 4.1 Revisiting Ordinary Attention
 To motivate attention from first principles, let's put ourselves in the shoes of a single residual
@@ -194,11 +195,11 @@ to me?
 import?
 
 The "where" question can be answered by having each actor $(u, l)$ specify what kind of information
-it <span class="idea">has</span> (<span class="term">key vector k_{u,l}</span>), and what kind it <span class="idea">wants</span> (<span class="term">query vector q_{u,l}</span>). Relevance is then
-a function of what we're looking for (our query $q_{t,l}) and what previous actors' have to offer (their key $k_{t, l}).
+it <span class="idea">has</span> (<span class="term">key $k_{u,l}$</span>), and what kind it <span class="idea">wants</span> (<span class="term">query $q_{u,l}$</span>). Relevance is then
+a function of what we're looking for (our query $q_{t,l}$) and what previous actors' have to offer (their key $k_{t, l}$).
 
 The actual information we import is a weighted sum of previous actors' information payload
-(<span class="term">value vector v_{u,l}</span>), weighted by the relevance scores, and multiplied
+(<span class="term">value vector $v_{u,l}$</span>), weighted by the relevance scores, and multiplied
 by an output projection matrix <span class="term">$W_O$</span>.
 
 In pseudocode:
