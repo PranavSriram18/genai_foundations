@@ -47,7 +47,7 @@ will use additional qualifiers (e.g. "sliding window attention").
 
 **Inspiration**
 
-This article is heavily inspired by [Anthropic's Mathematical Framework for
+This article is heavily inspired by Anthropic's [Mathematical Framework for
 Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html). One of our goals
 is to provide a gentler onramp to some of the deep technical insights expounded in that work.
 
@@ -180,13 +180,12 @@ passing information forward in time through attention, and upwards in depth thro
 ---
 
 ## 4. Anatomy of Causal Attention
-We'll now revisit how ordinary attention works, with an emphasis on (a) motivating it from first
-principles, and (b) highlighting aspects particularly salient to the frames we're developing. 
+We'll now briefly recap ordinary attention, before highlighting aspects particularly salient to the frames we're developing.
 
 ### 4.1 Revisiting Ordinary Attention
-To motivate attention, let's put ourselves in the shoes of a single residual actor at $(t, l)$. Our
-job in the attention step is to enrich our own state with information from previous streams. We can
-break this task down into asking two fundamental questions:
+To motivate attention from first principles, let's put ourselves in the shoes of a single residual
+actor at $(t, l)$. Our job in the attention step is to enrich our own state with information from
+previous streams. We can break this task down into asking two fundamental questions:
 
 <span class="idea">*Where should we look?*</span> Among all nodes $u \le t$, which ones are relevant
 to me?
@@ -194,19 +193,13 @@ to me?
 <span class="idea">*What information should I grab?*</span> From each chosen source, what information should I
 import?
 
-These questions correspond directly to the roles played by keys, queries, and values.
+The "where" question can be answered by having each actor $(u, l)$ specify what kind of information
+it <span class="idea">has</span> (<span class="term">key vector k_{u,l}</span>), and what kind it <span class="idea">wants</span> (<span class="term">query vector q_{u,l}</span>). Relevance is then
+a function of what we're looking for (our query $q_{t,l}) and what previous actors' have to offer (their key $k_{t, l}).
 
-* <span class="term">Key ($k_u$)</span>: each earlier actor $(u, l)$ emits a key vector $k_u$ that broadcasts
-  <span class="idea">this is the kind of information I have</span>.
-
-* <span class="term">Query ($q_t$)</span>: we emit a query vector $q_t$ that encodes <span class="idea">what kind of information we
-  want</span>.
-
-* <span class="term">Value ($v_u$)</span>: each earlier actor also emits a value vector containing the actual
-  <span class="idea">information payload</span> it provides if we select it.
-
-* We use our query to score each key's relevance, and construct a
-  <span class="idea">weighted average</span> of the associated values.
+The actual information we import is a weighted sum of previous actors' information payload
+(<span class="term">value vector v_{u,l}</span>), weighted by the relevance scores, and multiplied
+by an output projection matrix <span class="term">$W_O$</span>.
 
 In pseudocode:
 
@@ -225,24 +218,23 @@ $$
 \end{aligned}
 $$
 
-
 ### 4.2 Interpretability Takeaways: QK and OV Circuits
-Below are a few important implications of the attention mechanism on how information flows through
-a transformer model. 
+To unpack attention through the graph lens, we augment our previous grid graph with additional
+nodes for query, key, and value vectors, as well as the residual updates. Below are some salient
+aspects of the resulting picture.
 
 ![QK Image](../img/post0/qk.svg)
 
-<span class="idea">Separation of Concerns:</span> queries and keys decide <span class="idea">where
+<span class="idea">Separation of Concerns:</span> Queries and keys decide <span class="idea">where
 to read</span>; values and $W_O$ determine <span class="idea">what to write</span>. These circuits
 decompose information flow into <span class="idea">edge-disjoint subgraphs</span> called
 <span class="term">QK and OV circuits</span>, as depicted in the figure above.
 
 <span class="idea">Linearity Modulo Attention Pattern:</span> the only source of nonlinearity comes
-from the softmax operation, which is part of the QK circuit
-(determining the attention pattern). If we fix the attention pattern, the entire attention operation
-becomes a linear function of its inputs. Freezing attention patterns thus allows interpreting
-OV circuits formed by stacking attention layers (without MLPs), a lens adopted extensively in
-Anthropic's circuits paper.
+from the softmax operation, which is part of the QK circuit (determining the attention pattern). If
+we fix the attention pattern, the entire attention operation becomes a linear function of its 
+inputs. Freezing attention patterns thus allows interpreting OV circuits formed by stacking
+attention layers (without MLPs), a lens adopted extensively in Anthropic's circuits paper.
 
 <span class="idea">Additive Integration:</span> the imported content is added to the residual state;
 nothing is overwritten outright. We'll see implications of this in Section 6.2.
