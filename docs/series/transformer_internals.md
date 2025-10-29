@@ -196,7 +196,7 @@ import?
 
 The "where" question can be answered by having each actor $(u, l)$ specify what kind of information
 it <span class="idea">has</span> (<span class="term">key $k_{u,l}$</span>), and what kind it <span class="idea">wants</span> (<span class="term">query $q_{u,l}$</span>). Relevance is then
-a function of what we're looking for (our query $q_{t,l}$) and what previous actors' have to offer (their key $k_{t, l}$).
+a function of what we're looking for (our query $q_{t,l}$) and what previous actors' have to offer (their key $k_{u, l}$).
 
 The actual information we import is a weighted sum of previous actors' information payload
 (<span class="term">value vector $v_{u,l}$</span>), weighted by the relevance scores, and multiplied
