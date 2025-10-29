@@ -315,7 +315,7 @@ $$
 
 
 A key linear-algebraic observation is: <span class="idea">concatenation followed by linear projection
-is equivalent to summing linear projections applied to the individual slices</span>. Let $$W_O^j$ be
+is equivalent to summing linear projections applied to the individual slices</span>. Let $W_O^j$ be
 the slice of $W_O$ corresponding to head $j$.
 
 $$
