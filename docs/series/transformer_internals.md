@@ -40,10 +40,16 @@ terms are unfamiliar, that's expected - we'll develop each from first principles
 This article assumes you're comfortable with the basics of the transformer architecture,
 particularly causal self-attention. We recommend [Andrej Karpathy's video](https://www.youtube.com/watch?v=kCc8FmEb1nY), [3Blue1Brown's video](https://www.youtube.com/watch?v=wjZofJX0v4M), and [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) as excellent starting points.
 
-**Scope**
+**Scope & Caveats**
 
-We focus exclusively on causal, decoder-only transformers (like GPT-style models). Throughout this article, "attention" or "ordinary attention" refers to the standard causal self-attention mechanism used in these models, whereas attention variants
-will use additional qualifiers (e.g. "sliding window attention").
+We focus exclusively on causal, decoder-only transformers (like GPT-style models). Throughout this article, "attention" or "ordinary attention" refers to the standard causal self-attention
+mechanism, whereas variants use additional qualifiers (e.g. "sliding window attention").
+
+Our emphasis is on building intuition rather than mathematical rigor or implementation details. To this end, we take the following liberties:
+
+* Omit architectural and implementation details that don't change the core story (like normalizers, regularizers, numerical issues, positional encoding subtleties, special tokens, etc.)
+* Liberally anthropomorphize (introducing "actors" that "want" information, etc.)
+* Deliberately ignore many important realities of modern hardware. We address this decision in Section 5.2.
 
 **Inspiration**
 
@@ -51,21 +57,17 @@ This article is heavily inspired by Anthropic's [Mathematical Framework for
 Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html). One of our goals
 is to provide a gentler onramp to some of the deep technical insights expounded in that work.
 
-**Caveats**
-
-Our emphasis is on building intuition rather than mathematical rigor or implementation details. To this end, we take the following liberties:
-
-* Omit architectural and implementation details that don't change the core story (like normalizers, regularizers, numerical issues, positional encoding subtleties, special tokens, etc.)
-* Liberally anthropomorphize (introducing "actors" that "want" information, etc.)
-* Depict parallel computations as serial when it aids understanding.
-
 **Notation**
 
 We'll use the following notation throughout. Our working model will be a causal, decoder-only
 transformer with $L$ layers, hidden dimension $D$, and context length $T$. We denote input tokens
 by $w_1, \ldots, w_T$, and use $x_{t,l}$ to denote the representation of token $t$ at the input to
 layer $l$. We use 1-indexing for tokens and 0-indexing for layers; $x_{t,0}$ denotes the
-representation of the $t$th token entering the layer 0 (i.e. after token embedding and positional embedding).
+representation of the $t$th token entering the layer 0 (i.e. after token embedding and positional
+embedding). In describing causal attention, we'll often refer to "previous" or "earlier" tokens
+with the understanding that this includes the current token (i.e. only excludes tokens strictly in
+the future).
+
 Key terms are highlighted in <span class="term">blue</span> and key insights in <span class="idea">green</span>. 
 (Hence, a good way to skim this article is to simply <span class="idea">follow the colored words</span>.)
 ---
@@ -88,7 +90,7 @@ transformer layer is composed of three core operations:
 
 1. Attention - the core focus of this article.
 2. MLP - a shallow feedforward neural network.
-3. Normalizers and regularizers, like LayerNorm, dropout, and others. While important, we will omit
+3. Normalizers and regularizers, like LayerNorm, dropout, and others. While important, we omit
 these from all equations and descriptions for brevity, as they don't change our core explanations.
 
 **Columns as Residual Streams**
@@ -170,9 +172,6 @@ evolution of a token's representation via residual updates between layers.
 
 * <span class="term">Horizontal edges</span> $(u, l) \to (t, l)$ represent information flow from
 earlier to later streams.
-
-(Note: technically there is also an edge from each node to itself. We omit these from diagrams and
-from wording like "earlier to later" for brevity.)
 
 In this view, a transformer is a <span class="idea">two-dimensional graph of collaborating actors,
 passing information forward in time through attention, and upwards in depth through residual updates</span>.
@@ -275,7 +274,7 @@ each stream’s linear work stems both scoring all previous keys (QK circuit) an
 all corresponding values (OV circuit). Thus, <span class="idea">any attempt to break the quadratic
 barrier must address both QK and OV circuits</span>. 
 
-### 5.2 Aside: Nuances on Complexity
+### 5.2 Discussion: Nuances on Complexity (Optional Reading)
 
 Interestingly, in a [talk](https://www.youtube.com/watch?v=rBCqOTEfxvg&t=1080s) shortly after the original
 Transformer paper, Łukasz Kaiser recalled being nervous about the cost being quadratic in context
@@ -285,10 +284,12 @@ length, before Noam Shazeer pointed out that $D$ was significantly larger than $
 An important consideration in the complexity discussion is that attention is highly parallel, so
 wall-clock time and raw FLOP counts are entirely different things. Memory hierarchies, SIMD,
 inter-GPU communication, compiler optimizations, quantization, etc. further complicate the
-picture, and algorithms that account for hardware realities (like Flash Attention) are a possible
-subject for a future article.
+picture. While real kernels must contend with these realities that we largely ignore for the
+moment, the conceptual foundation provided here provides a basis for understanding those 
+algorithms. As an analogy, CS curricula typically introduce binary trees before memory
+hierarchy-aware variants like B+ trees.
 
-One interesting frame in a world of increasing compute is: what is the complexity of an
+Another interesting frame in a world of increasing compute is: what is the complexity of an
 algorithm in the limit of infinite parallel compute? For a fascinating deep dive, see ["Attention is Logarithmic (Actually)"](https://supaiku.com/attention-is-logarithmic).
 
 Finally, as a personal aside, a pet peeve of mine is when the complexity of attention is written as
