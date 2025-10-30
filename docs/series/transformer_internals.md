@@ -2,16 +2,16 @@
 
 ## 1. Introduction
 
-How do Transformers - the models that underpin modern LLMs - actually work under the hood? And how
-can we make them faster? These are central questions in modern AI research, particularly in the
-subfields of mechanistic interpretability, attention variant design, and sparsity. The goal of this
-article is to bridge the gulf between introductory material and the rapidly evolving frontier of
-these fields, and deepen readers' intuition on Transformer internals and attention variants.
+How do [Transformers](https://arxiv.org/abs/1706.03762) - the models that underpin modern LLMs 
+actually work under the hood? And how can we make them faster? These are central questions in
+modern AI research, particularly in the subfields of mechanistic interpretability, attention
+variant design, and sparsity. The goal of this article is to bridge the gulf between introductory
+material and the rapidly evolving frontier of these fields, and deepen readers' intuition on
+Transformer internals and attention variants.
 
-In particular, our (perhaps ambitious) thesis is: despite the diversity of
-ideas in this space, <span class="idea">a handful of mental models
-and metaphors is sufficient to understand the research frontier</span>.
-
+In particular, our (perhaps ambitious) thesis is: despite the diversity of ideas in this space,
+<span class="idea">a handful of mental models and metaphors is sufficient to understand the
+research frontier</span>.
 
 
 ![Lead Image](../img/post0/lead-image.svg)
@@ -38,7 +38,7 @@ terms are unfamiliar, that's expected - we'll develop each from first principles
 **Prerequisites**
 
 This article assumes you're comfortable with the basics of the transformer architecture,
-particularly causal self-attention. We recommend [Andrej Karpathy's video](https://www.youtube.com/watch?v=kCc8FmEb1nY), [3Blue1Brown's video](https://www.youtube.com/watch?v=wjZofJX0v4M), and [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) as excellent starting points.
+particularly causal self-attention. We recommend [Andrej Karpathy's video](https://www.youtube.com/watch?v=kCc8FmEb1nY), [3Blue1Brown's video](https://www.youtube.com/watch?v=wjZofJX0v4M), and [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) as excellent starting points. 
 
 **Scope & Caveats**
 
@@ -346,7 +346,7 @@ head composition across layers in action.
 within the column space of $W_O^j$, which has rank at most $D/H$. Heads are hence low-rank writers 
 into subspaces of the shared stream.
 
-<span class="idea">Potentially limited interaction between heads:</span> if two heads write largely
+<span class="idea">Head interaction and the role of $W_O$:</span> if two heads write largely
 into orthogonal subspaces, later computation may treat their contributions as independent. Overlap
 enables constructive or destructive interference. The geometry of $W_O$ therefore partitions
 bandwidth and mediates the extent to which separate heads interact.
