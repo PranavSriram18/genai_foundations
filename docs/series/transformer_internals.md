@@ -2,8 +2,7 @@
 
 ## 1. Introduction
 
-How do [Transformers](https://arxiv.org/abs/1706.03762) - the models that underpin modern LLMs 
-actually work under the hood? And how can we make them faster? These are central questions in
+How do [Transformers](https://arxiv.org/abs/1706.03762) - the models that underpin modern LLMs - actually work under the hood? And how can we make them faster? These are central questions in
 modern AI research, particularly in the subfields of mechanistic interpretability, attention
 variant design, and sparsity. The goal of this article is to bridge the gulf between introductory
 material and the rapidly evolving frontier of these fields, and deepen readers' intuition on
