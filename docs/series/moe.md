@@ -1,46 +1,60 @@
 
 # The Sparsity Frontier: Core Innovations in Kimi K2 and DeepSeek V3
-(UNDER CONSTRUCTION)
+(NOTE: UNDER CONSTRUCTION)
 
 ## 1. Introduction
-The world spends (TODO - look up amount) per year on LLM inference, and demand is growing
-exponentially (TODO - placeholder; replace hook if needed). A core design limitation of standard <span
-class="idea">dense</span> LLMs is the tight coupling between parameters count (how much the LLM 
-"knows") and flop count (how much "work" the LLM has to do to generate a token). When you ask a powerful LLM "what is the capital of Kenya?",
-you are in some sense paying for the fact that the LLM is fluent in Korean,
-an expert in Medieval history, and proficient in group theory, despite the simple and focused
-nature of your question. More precisely, a standard MLP layer in a transformer with embedding
-dimension $D$, and MLP width $wD$ has $O(D^2w)$ parameters and requires $O(CD^2w)$ flops to generate
-$C$ tokens, meaning flop count scales linearly with parameter count.
+A core design limitation of standard <span class="idea">dense</span> LLMs is the tight coupling between parameter count ("knowledge" or "long-term memory"), and flop count (the amount of "work" required to generate a token), due to knowledge being diffuse across parameters rather than localized.
+When we ask "what is the capital of Kenya?", we effectively pay for the LLM's
+proficiency in Medieval history, Korean literature, and quantum mechanics, despite the bounded scope
+of our question.
 
-A natural solution to this problem is <span class="idea">sparsity</span>: decouple memory and compute
-by selectively involving a small subset of parameters in each token-generation step.
-The standard way this is done today is through Mixture of Experts (MoE) layers. 
+A natural solution to this problem is <span class="idea">sparsity</span>: decouple memory and
+compute by selectively invoking a bounded subset of parameters for each layer-token pair,
+thereby implicitly localizing knowledge. <span class="term">Mixture of Experts (MoE)</span> layers are a particular
+class of solutions in the design space of sparse networks, and are the standard approach used today. 
 
 The core challenge of sparsity in general and MoEs in particular is that the imposition of discrete
 structure on systems we train with continuous tools (backprop) creates a fundamental tension, with
-implications for modeling, optimization, and systems. Moreover, these problems are tightly coupled;
-hence progress in this direction necessitates expertise of modeling and systems alike. In this
-article, we'll frame these core challenges, and explore how innovations in the latest Kimi and
-Deepseek models address them. 
+implications for learning dynamics, manifold geometry, memory access, inter-GPU communication, and
+post-training. Moreover, these problems are tightly coupled; hence progress in sparsity
+necessitates expertise in modeling and systems alike. In this two-part series, we'll
+dig into these core challenges, review some of the foundational approaches to them, and explore
+several novel ideas introduced in the bleeding edge sparse models <span class="term">DeepSeek
+V3</span> and <span class="term">Kimi K2</span>.
 
 
-## 2. Prerequisites & Scope
-This is a fairly advanced article, and we'll assume familiarity with the fundamentals of MoEs and
-distributed training (e.g. 4D parallelism, ZeRO, etc.). We'll draw on some ideas from our previous article on [transformers as information flow graphs](TODO - link); while
-this isn't strictly required pre-reading, we recommend skimming section 3. Our focus in this article
-will be on MoE innovations; topics like sparse attention, reduced precision training, etc. will just
-be briefly touched on in Section 7. 
+## 2. Preliminaries
+### 2.1 Prerequisites
+This is a fairly technical article, and we'll assume familiarity with the fundamentals of MoEs and
+distributed training (e.g. 4D parallelism (PP/DP/EP/TP), ZeRO, etc.). We'll draw on some ideas from our previous article on [transformers as information flow graphs](https://github.com/PranavSriram18/genai_foundations/blob/main/docs/series/transformer_internals.md); while
+this isn't strictly required pre-reading, we recommend skimming Section 3. 
 
-The table below standardizes the notation we'll be using throughout. 
+### 2.2 Scope
+While Kimi and DeepSeek introduce a number of innovations across the training stack, we'll primarily
+focus on those directly connected to MoEs. In particular, we'll discuss:
+* challenges with training large sparse models, and frames for reasoning about them (Section 3)
+* elements of Kimi K2 and DeepSeek V3's architectures that utlize existing approaches to sparsity
+(Section 4)
+* A novel approach to auxiliary-free load balancing introduced in DeepSeek V3 (Section 5)
+* Other innovations in K2 and V3, such as dispersion bounding, finer-grained
+sparsity, MLA, MuonClip, etc. (Brief overview in Section 6; deeper dives in Part 2).
 
-TODO (@ LLM) - put this in a table
-D_1: embedding dimension
-m: total number of experts
-k: active experts (not counting fixed experts)
-k_f: fixed experts
-b: expert size
-D_2: MoE hidden dimension (D_2 = b*m)
+### 2.3 Notation
+The table below standardizes the notation we'll be using throughout. Note that throughout when discussing
+"active" or "fixed" experts/params we mean per token.
+
+| Symbol | Meaning                                                               |
+| ------ | --------------------------------------------------------------------- |
+| $D$    | Embedding dimension (model hidden size per token)                     |
+| $T$    | Context length (tokens per sequence)                                  |
+| $m$    | Total number of routed experts (excludes shared expert unless stated) |
+| $k$    | Active routed experts                                       |
+| $k_f$  | Fixed experts (e.g., shared expert)                         |
+| $b$    | Expert width (neurons in a single expert’s MLP/FFN block)             |
+| $w$    | MoE width ratio ( $w = \frac{b \cdot m}{D}$ )                         |
+| DV3    | Abbreviation for Deepseek V3                                          | 
+| K2     | Abbreviation for Kimi K2                                              |
+
 
 ---
 
@@ -64,7 +78,7 @@ mitigate these issues, such as activation recomputation, lower-precision storage
 shared expert caching, and router replication each introduce additional complexity and possible
 interactions with other aspects of implementation and analysis.
 
-### 3.2 Modeling Challenges: Manifold Partitioning, Specialization, and Dead Experts
+### 3.2 Experts, Manifold Partitioning, and a Fishing Analogy
 TODO - this part needs substantial changes
 The promise of MoE rests on <span class="term">expert specialization</span>. Specialization fails when <span class="term">dead experts</span> emerge from gradient starvation, when a few experts monopolize traffic, or when routing boundaries jitter so much that experts cannot settle on stable roles. Classic <span class="term">auxiliary load-balancing losses</span> spread utilization but can corrupt token–expert affinities and weaken specialization. Temperature, entropy, and EMA schedules trade exploration against lock-in. Capacity limits force second-best choices when the top expert is full, which can help exploration but also increase variance. A <span class="term">shared expert</span> can backstop quality, yet too much shared capacity reduces pressure to specialize. Curriculum and post-training shift the data manifold, moving Voronoi-like boundaries and destabilizing routes unless the router adapts.
 
@@ -76,14 +90,14 @@ capacity budget, with gradients that remain faithful to token–expert affinity<
 ## 4. Architecture Specs and Standard Elements
 
 ### 4.1 Spec Table
+Below is a table detailing core hyperparamerers for DV3 and K2.  
 
-
-| Dimension                         | DeepSeek V3                                                                | Kimi K2                                                           |
+| Dimension                         | Deepseek V3                                                                | Kimi K2                                                           |
 | --------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **Total Params**                  | **[VERIFY ~671B]**                                                         | **[VERIFY ~1.0T]**                                                |
-| **Active Params (per token)**     | **[VERIFY ~37B]**                                                          | **[VERIFY ~32–33B]**                                              |
+| **Total Params**                  | **[671B]**                                                         | **[1.0T]**                                                |
+| **Active Params**     | **[37B]**                                                          | **[32B]**                                              |
 | **Total Experts**                 | **256 routed + 1 shared**                                                  | **384 routed + 1 shared**                                         |
-| **Active Experts / Token**        | **8 routed** + shared always available **[VERIFY]**                        | **8 routed** + shared available                                   |
+| **Active Experts**        | **8 routed + 1 shared**                        | **8 routed + 1 shared**                                  |
 | **Expert width (per-expert MLP)** | **[VERIFY hidden size / FFN dims]**                                        | **[VERIFY hidden size / FFN dims]**                               |
 | **Learning algorithm**            | Next-token LM with **MTP**; aux-free balancing on router                   | Next-token LM; training stabilized with **MuonClip / QK-Clip**    |
 | **Routing control**               | **Aux-loss-free dynamic bias** + minimal **sequence-level** safeguard      | **Simple top-k** (no grouping, no in-gate balancing)              |
@@ -112,7 +126,7 @@ Before we dive into novel ideas, let’s briefly establish the common elements t
 * <span class="term">Shared-expert locality</span>: cache/pin the **shared expert** near the token path to avoid paying cross-node latency on common fall-back routes.
 
 
-## 5. Auxiliary-Free Load Balancing (Deepseek V3)
+## 5. Auxiliary-Free Load Balancing (DeepSeek V3)
 In our running picture, **lakes** represent regions of the data manifold and **fishermen** are the **experts**. A classic <span class="term">auxiliary diversity loss</span> is like a redistributive tax that penalizes popular lakes and subsidizes empty ones inside the **preference function** itself. This evens out utilization, but it also changes what “best lake” means for each fisherman and can reduce catch quality.
 
 DeepSeek keeps preferences honest and instead changes the **reach** of each fisherman. Imagine walking along the shore with a pair of shears. For over-crowded lakes, you **trim the rod length** of the successful fishermen, shrinking their radius of influence. For under-served lakes, you **extend rod length**, expanding their reach. Preferences remain about fish density; availability is nudged externally. <span class="idea">Balance is achieved by shaping access, not by corrupting preference</span>.
@@ -143,92 +157,15 @@ TODO - check formatting of math blocks (square brackets vs $$)
 
 This split keeps token→expert **affinity clean** while a slow control loop adjusts **effective availability**. In control terminology, the utilization error (u^* - u_i) drives a PI controller that trims or extends each expert’s “rod length.” The router continues to learn specialization from the true signal.
 
----
-
-## 6. Bounded Dispersion
-TODO - this section feels too long
 
 
-### 6.1 Why dispersion matters
-TODO - reword
-Inter-node communication is the expensive part of MoE. If a token’s activated experts live on many nodes, route variance turns into stragglers and small-message all-to-all. 
+## 6. Other Innovations
 
-The useful abstraction is the token’s **communication subgraph**. <span class="term">Node-limited routing</span> makes this subgraph compact by capping how many nodes a token may touch at (M). <span class="idea">Treat dispersion as a first-class budget alongside top-(k)</span>.
-
-### 6.2 A single-pass, effectively hierarchical algorithm
-TODO - revise notation
-
-Let there be (G) nodes and routed experts (E=\bigcup_{n=1}^{G} E_n) where (E_n) are the experts hosted on node (n). For a token with representation (x):
-
-1. **Score experts.** Compute per-expert logits once
-   [
-   \ell_i = f(x, e_i), \quad i \in E.
-   ]
-
-2. **Score nodes.** Estimate which nodes could serve the token well using their strongest candidates. A simple, effective choice is a **top-(r)** aggregate
-   [
-   A_n = \sum_{i \in \text{Top}*r(E_n)} \ell_i,
-   ]
-   with (r) chosen so that (rM \ge k). A soft alternative is (\mathrm{lse}*{i\in E_n}(\ell_i)). The goal is the same: approximate a node’s headroom without another forward pass.
-
-3. **Select nodes.** Choose up to (M) nodes with the largest (A_n).
-
-4. **Select experts within chosen nodes.** From (\bigcup_{n\in \text{chosen}} E_n), pick the global top-(k) experts by (\ell_i), enforcing per-expert capacity.
-
-The router still runs a single scoring pass over experts. The group selection over nodes makes it **effectively hierarchical** at node granularity. If one node already contains enough strong experts the token lands entirely on that node. Otherwise it touches at most (M) nodes by construction.
-
-### 6.3 Effects on learning geometry
-TODO - tighten
-
-Capping dispersion shrinks the candidate set the router searches. That reduces cross-node route churn and smooths Voronoi boundaries induced by placement. Experts on the same node compete more often with one another, which encourages **local specialization** and reduces interference from far-flung candidates that would be costly to use. There is a tradeoff. If (M) is too small relative to how experts are distributed, the cap can force second-best assignments and slightly raise variance for tokens whose ideal experts are scattered. In practice this is mitigated by placement and a strong shared expert that backstops quality when the cap binds.
-
-### 6.4 Systems consequences and why schedules get easier
-
-Bounding dispersion turns a fuzzy risk into a predictable envelope.
-
-* **Cross-node edges.** A token now contributes at most (M) cross-node edges in all-to-all. Incast width is smaller and more uniform. Straggler variance drops.
-* **Overlap.** With narrower, repeatable all-to-all blocks, aggressive overlap is feasible. DualPipe-style timelines can nest MoE communication under forward and backward compute more reliably because long-tail sprays are pruned.
-TODO - wtf is this placement bullet?
-* **Placement.** With an (M) budget, placement pays off. Co-locate frequently co-activated experts. Keep the <span class="term">shared expert</span> proximate or cached so the default path remains intra-node.
-* **Capacity planning.** Because the subgraph is compact, batch sizing and microbatching are easier to tune. Fewer small packets cross node boundaries which reduces launch overhead and better utilizes links.
-
-<span class="idea">The modeling cap on dispersion is the enabler for a simpler and more stable communication schedule</span>.
-
-### 6.5 Knobs
-TODO - i removed existing stuff from this subsection because it looked totally speculative. check
-actual knobs used in model
-
-
-## 7. Finer-grained sparsity in Kimi
-
-**Opener.** K2 increases the routed-expert **pool** to **[VERIFY: 384]** while keeping **active experts per token = 8** and a single <span class="term">shared expert</span> **[VERIFY]**. Total vs active parameters are roughly **[VERIFY: ~1.0T / ~32–33B]**.
-
-### 7.1 Geometry and learning dynamics
-
-With many more experts at fixed (k), the representation manifold is cut into **more, smaller cells**. Tokens search a denser set of nearby specialists at the same FLOP budget. Local competition rises among neighbors on the manifold, reducing interference from distant experts and letting features sharpen within each cell. The boundary grid becomes finer, which improves long-tail coverage but increases sensitivity to early traffic. Warm-up and temperature schedules matter so tokens explore enough candidates before settling. The <span class="term">shared expert</span> provides a floor when a niche cell is under-trained. <span class="idea">Breadth raises the odds of a near match without raising per-token compute</span>.
-
-### 7.2 Costs—and how K2 pays them
-
-A larger pool raises **routing entropy**, **dispatcher metadata**, and the number of **small messages**. It also risks <span class="term">expert under-training</span> if traffic is spiky. K2 absorbs these taxes with targeted systems choices:
-
-* **Interleaved <span class="term">1F1B</span>** keeps stages busy and tucks MoE <span class="term">all-to-all</span> under compute on RoCE-heavy clusters, avoiding heavier orchestration.
-* **Activation budget engineering** — <span class="term">selective recompute</span>, <span class="term">FP8 activation storage</span>, and <span class="term">CPU offload</span> with overlapped copies — reduces HBM pressure so EP traffic fits under compute.
-* **Placement hygiene** spreads load and avoids hot spots so unconstrained dispersion does not explode into pathological fan-out.
-
-Despite the finer granularity, K2 keeps the **router simple**: standard top-(k) over routed experts, no extra balancing in the gate. This works because the **systems margin** and **training stability** carry the complexity that V3 addresses in the router.
-
-
-
-## 8. Non-MoE Innovations
-
-* **MLA attention:** latent KV compression; reduces memory/traffic—enabler for long contexts.
-* **MTP (DeepSeek):** multi-token prediction; interacts with routing frequency and gradient flow.
-* **MuonClip (K2):** **Muon** optimizer + **QK-Clip** (per-head logit rescale past threshold τ) — stabilizes long pretrain **[VERIFY ~15.5T tokens]**; prevents attention-logit blowups.
-* **Precision & memory:** **FP8 activation storage**, targeted **recompute**, and **CPU offload** (K2 emphasis) to fit deep PP/EP without starving bandwidth.
-
----
-
-
-## 9. Open Questions & Future Directions
-
-TODO
+* <span class="term">MLA attention</span>: latent KV compression that cuts memory and traffic, enabling longer contexts.
+* <span class="term">MTP (DeepSeek)</span>: multi-token prediction objective that changes gradient pathways and interacts with routing frequency.
+* <span class="term">MuonClip (K2)</span>: Muon optimizer plus **QK-Clip** (per-head logit rescale beyond a threshold τ), stabilizing long pretrain **[VERIFY ~15.5T tokens]** and preventing attention-logit blowups.
+* <span class="term">Precision and memory</span>: FP8 activation storage, targeted recompute, and selective CPU offload (emphasized in K2) to fit deep PP/EP without starving bandwidth.
+* <span class="term">Topology-aware kernels</span>: custom all-to-all and packing paths that reduce launch overhead and improve link utilization on NVLink and RoCE.
+* <span class="term">Activation scheduling</span>: selective checkpointing and recompute placement to keep overlap feasible under fixed HBM budgets.
+* <span class="term">KV cache tactics</span>: quantization and layout choices that shrink cache footprint while preserving attention quality.
+* <span class="term">Inference path hygiene</span>: shard placement, batching, and cache locality strategies that keep hot paths intra-node for low-latency decode.
