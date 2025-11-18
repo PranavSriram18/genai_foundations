@@ -43,27 +43,14 @@ MoEs and sparsity. In particular, we'll discuss:
 * A brief discussion of salient non-sparsity-specific aspects of these models (Section 6)
 * A deeper dive into DV3's auxiliary-free load balancing (Part 2)
 
+
 ### 2.3 Notation
-We consider MoE layers with input dimension $D$, $m$ total experts, and $k$ selected experts (per token, per layer). In addition, we'll let $k_f$ denote the number of shared/fixed experts ($m$ and
-$k$ refer only to non-shared). The reference table below standardizes the notation we'll be using throughout. (Note that when discussing "active" or "fixed" experts/params we mean per token.)
-
-| Symbol | Meaning                                                               |
-| ------ | --------------------------------------------------------------------- |
-| $D$    | Embedding dimension (model hidden size)                     |
-| $L$    | Number of layers   |
-| $P$    | Total model parameters    |
-| $P_a$  | Active model parameters   |
-| $T$    | Context length    |                                   
-| $m$    | Total number of experts (excluding fixed/shared)  |
-| $k$    | Active experts  (excluding fixed/shared)  |
-| $k_f$  | Fixed experts    |
-| $s$    | Expert sparsity; ratio of total to active routed experts ($m/k$)   |
-| $b$    | Expert width (neurons in a single expert’s MLP/FFN block)             |
-| $w$    | MoE width ratio ( $w = \frac{b \cdot m}{D}$ )                         |
-| DV3    | Shorthand for Deepseek V3                                          | 
-| K2     | Shorthand for Kimi K2                                              |
-
----
+We consider MoE layers with input dimension <span class="term">$D$</span>,
+<span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). In addition, we'll let <span class="term">$k_f$</span> denote the number of
+shared/fixed experts ($m$ and $k$ refer only to non-shared), and <span class="term">$T$</span> the
+context length. (See the spec table in Section 4.3 for a full list of symbols we use across the article.) We'll use DV3 and K2 as shorthand for Deepseek V3 and Kimi K2. Key terms are highlighted
+in <span class="term">blue</span>, and key ideas in <span class="idea">green</span>; hence a good
+way to skim this article is to follow the colored words.
 
 ## 3. The Challenge of Sparsity
 ### 3.1 Systems Challenges - High Level Framing
@@ -212,8 +199,7 @@ novel hardware and algorithms, might we see models with 1000x or 10000x sparsity
 not-so-distant future?
 
 ### 4.3 Spec Table
-The table below summarizes several key aspects of DV3 and K2's architectures. We'll discuss many of
-these in Sections 5 and 6.
+The table below summarizes several key aspects of DV3 and K2's architectures.
 
 | Dimension | Deepseek V3 | Kimi K2 |
 | --- | --- | --- |
@@ -222,35 +208,34 @@ these in Sections 5 and 6.
 | **Total:Active Param Ratio** | **18.3** | **31.9** |
 | **Pretraining Tokens** | **14.8T** | **15.5T** |
 | **Total Layers ($L$)** | **61** | **61** |
-| **Embedding Dimension** | **7168** | **7168** |
+| **Embedding Dimension ($D$)** | **7168** | **7168** |
+| **Context Length ($T$)**  | **128K**  | **128K** |
 | **Total Experts ($m$)** | **256** | **384** |
 | **Active Experts ($k$)** | **8** | **8** |
 | **Expert Sparsity ($s$)** | **32** | **48** |
 | **Shared Experts ($k_f$)**| **1** | **1** |
 | **Expert width ($b$)** | **2048** | **2048** |
-| **Learning algorithm** | **NTP, MTP** | **NTP, MuonClip** |
+| **Learning algorithm** | **AdamW** | **MuonClip** |
 | **Routing control** | **Aux-loss-free dynamic bias** + lightweight **sequence-level** safeguard | **Simple top-k** (no grouping, no in-gate balancing) |
-| **Dispersion control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit** |
+| **Dispersion control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit; implicit via low EP** |
 | **Attention Mechanism** | **MLA** | **MLA** |
-| **Attention Heads**  | **128** | **64**
-| **Parallelism / overlap** | **PP + EP**, **No TP**; **DualPipe** | **PP (virtual) + EP + ZeRO-1**, **Interleaved 1F1B**, **No DualPipe** |
-| **Memory / activation tactics** | **Recompute**, **Reduced Precision**, **CPU Offload** | **Recompute**, **Reduced Precision**, **CPU Offload** |
+| **Attention Heads**  | **128** | **64** |
+| **Parallelism Strategy** | **DualPipe** | **Interleaved 1F1B** |
+| **Memory Optimizations** | **Recompute**, **Reduced Precision**, **CPU Offload** | **Recompute**, **Reduced Precision**, **CPU Offload** |
 
 ## 5. Communication & Memory Optimizations
 ### 5.1 Training Parallelism & Communication
 Both models compose <span class="term">pipeline parallelism (PP)</span>, <span class="term">expert
 parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html)</span>.
 
-<span class="term">No Tensor Parallelism</span>
-
-As we saw in Section 3.1, cross-node communication under expert parallelism unfavorably tips the
+<span class="term">No Tensor Parallelism</span><br>
+As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
 fine-grained sparsity, is to <span class="idea">remove tensor parallelism</span>. The DV3 paper
 explicitly mentions removing tensor parallelism during training, and the K2 paper does not mention
 using tensor parallelism.
 
-<span class="term">DualPipe (DV3)</span>
-
+<span class="term">DualPipe (DV3)</span><br>
 DV3 also introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
 overlap communication and computation
 <span class="idea">within a paired forward-backward channel</span>. Specifically, DualPipe splits
@@ -276,17 +261,17 @@ copy.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
 reduce expert-parallel communication in order for it not to dominate during 1F1B. K2 achieves this
-by adopting "the smallest feasible EP parallelization strategy," setting the number of devices
-experts are partitioned across to just 16. Note that lower expert parallelism implies more experts
+by adopting "the smallest feasible EP parallelization strategy," partitioning experts across just
+16 devices. Note that lower expert parallelism implies more experts
 per GPU, which implicitly smoothes load (even if load is imbalanced across experts, it has a higher
 probability of being balanced across GPUs, due to the law of large numbers).
 
 ### 5.2 Hot Expert Replication (DV3)
 The basic idea of replication is that during inference, we can monitor online statistics of expert
 loads, and <span class="idea">redundantly deploy</span> high-load experts in a manner that balances
-load across GPUs without increasing inter-node  communication. DV3 applies this strategy to the
+load across GPUs without increasing inter-node communication. DV3 applies this strategy to the
 prefilling stage of inference specifically. It uses 32 redundant experts (out of 256 total), with
-each GPU hosting its 8 original experts plus one redundant expert.
+each GPU hosting its 8 original experts plus 1 redundant expert.
 
 ### 5.3 Custom Kernels
 DV3 develops custom kernels using [PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing/) for efficient all-to-all communication. While
