@@ -66,8 +66,8 @@ coupled to architectural choices.
 
 ### 3.2 Dynamic Dispatch
 Expert parallelism shards the $m$ experts across $d$ devices. The choice of which expert processes
-which token is a function of the token, tokens must be <span class="term">dynamically dispatched<
-span> to experts. Mechanically, this involves packing tokens into contiguous <span class="term">send
+which token is a function of the token, tokens must be
+<span class="term">dynamically dispatched</span> to experts. Mechanically, this involves packing tokens into contiguous <span class="term">send
 buffers</span> (with padding for aligmment), exchange via <span class="term">all-to-all dispatch</span>,
 processing as small <span class="term">GEMM</span> batches, and finally unpacking to the original order via
 <span class="term">all-to-all reduction</span>. This communication pattern raises several potential
