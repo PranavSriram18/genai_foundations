@@ -34,14 +34,15 @@ and how [distributed training](https://colossalai.org/docs/concepts/paradigms_of
 
 ### 2.2 Scope & Roadmap
 Kimi K2 and DeepSeek V3 introduce a number of innovations across data, pretraining, and 
-post-training. In this article, we'll primarily focus on pretraining aspects directly connected to
+post-training. We'll primarily focus on pretraining aspects directly connected to
 MoEs and sparsity. In particular, we'll discuss:
 
-* Challenges with training large sparse models, and frames for reasoning about them (Section 3)
-* Core elements of Kimi K2 and Deepseek V3's sparsity architectures (Section 4)
-* Several innovations in K2 and DV3 that address specific sparsity challenges (Section 5)
-* A brief discussion of salient non-sparsity-specific aspects of these models (Section 6)
-* A deeper dive into DV3's auxiliary-free load balancing (Part 2)
+* Challenges with training large sparse models, and frames for reasoning about them (Sections 3 and 4)
+* Core elements of Kimi K2 and Deepseek V3's sparsity architectures (Section 5)
+* Several innovations in K2 and DV3 that address specific sparsity challenges (Sections 6-8)
+
+This article will mostly focus on systems innovations (and systems-modeling codesign). We'll cover
+a very interesting pure modeling piece (auxiliary-free load balancing in Deepseek V3) in Part 2.
 
 
 ### 2.3 Notation
@@ -52,8 +53,10 @@ context length. (See the spec table in Section 4.3 for a full list of symbols we
 in <span class="term">blue</span>, and key ideas in <span class="idea">green</span>; hence a good
 way to skim this article is to follow the colored words.
 
-## 3. The Challenge of Sparsity
-### 3.1 Systems Challenges - High Level Framing
+---
+
+## 3. Systems Challenges for Sparsity
+### 3.1 High Level Framing
 A general design goal in modern pipeline-parallel distributed training is to hide latency by
 scheduling compute precisely to overlap with communication; hence anything that increases
 communication or makes it less predictable poses a challenge.
@@ -94,24 +97,29 @@ themselves) scales with $k$, not $m$. A few issues complicate this picture.
 
 <span class="term">Routing Metadata</span><br>
 Routing necessitates a lot of bookkeeping: top-k indices, permutation maps, and scatter/gather
-layouts to invert token dispatch for the backwards pass, plus moving averages/auxiliary terms for
-load balancing. This is still $O(kT)$, but nontrivial overhead nonetheless. 
+layouts to invert token dispatch for the backwards pass, plus auxiliary terms for load balancing.
+This is still $O(kT)$, but nontrivial overhead nonetheless. 
 
 <span class="term">Comms Buffers</span><br>
 Under expert parallelism, tokens are packed into per-destination fixed-capacity send/recv buffers.
 Padding becomes significant under imbalanced loads, particularly early in training.
 
 <span class="term">Optimizer State</span><br>
-Modern learning algorithms like Muon or Adam require per-parameter additional state, which grows
-with $m$ rather than $k$. As the K2 paper notes, "*after reserving space for
+Algorithms like Muon and Adam require per-parameter additional state, which grows
+with $m$ rather than $k$. The K2 paper notes, "*after reserving space for
 parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is insufficient to hold
 the full MoE activations.*"
 
-We'll see in Section 5 how K2 and DV3 address memory and communication challenges via various
+In addition to total memory, load imbalances (especially early in training) can tip high-load GPUs
+over their individual limits, causing OOM crashes.
+
+We'll see in Sections 6 and 7 how K2 and DV3 address memory and communication challenges via various
 techniques including reduced precision, activation recomputation, CPU offloading, novel pipeline
 schedules, caching, replication, and others.
 
-### 3.5 Modeling Challenges: Expert Specialization, Manifold Partitioning, and a Fishing Analogy
+---
+
+## 4. Modeling Challenges: Expert Specialization, Manifold Partitioning, and a Fishing Analogy
 Intuitively, a modeling design goal of MoE layers is for different experts to specialize to "cover"
 different parts of the input data manifold. A few potential failure modes include:
 
@@ -141,17 +149,17 @@ these auxiliary losses via a novel algorithm.
 
 ---
 
-## 4. Sparsity Architecture
+## 5. Sparsity Architecture
 In this section we'll examine the broad contours of the architectures of K2 and DV3.
 
-### 4.1 Expert Selection
+### 5.1 Expert Selection
 The high-level elements of K2 and DV3's MoE layer are fairly familiar: for each token, first compute
 <span class="term">token-expert affinities</span> with a per-expert sigmoid, then apply <span class="term">top-k hard gating</span>, then normalize
 selected experts' affinities into <span class="term">scores</span>. Both K2 and DV3 use one <span class="term">shared
 expert</span> that is exempt from this scoring process (its score is fixed to 1). 
 
 DV3 introduces two core twists: <span class="term">auxiliary-free load balancing</span> via a bias
-term (discussed in Part 2) and <span class="term">dispersion bounding</span>, discussed below.
+term (discussed in Part 2) and <span class="term">dispersion bounding</span>.
 
 <span class="term">Dispersion Bounding (DV3)</span>
 
@@ -162,9 +170,9 @@ nodes</span>. Concretely, say we have 8 active experts, the top 7 scoring expert
 $n_1, n_2, n_3, n_4$, and the 8th expert lives on a fifth node $n_5$. The 8th expert would be
 dropped and replaced by the next-highest scoring expert that lives on one of $n_1, n_2, n_3, n_4$.
 
-### 4.2 Ultra Sparse Design
-DV3 uses $k = 8$, $m = 256$, $k_f = 1$ (8 active experts out of 256, plus one fixed), for a sparsity
-ratio of $s = 32$. Not only is this a high ratio, it is also very <span class="idea">fine-grained</span> sparsity. K2 pushes even further, with $k = 8$, $m = 384$. The table below compares these
+### 5.2 Ultra Sparse Design
+DV3 uses $k = 8$, $m = 256$, $k_f = 1$ (8 active out of 256, 1 fixed), for a sparsity
+ratio of $s = 32$. This is not only a high ratio, but also very <span class="idea">fine-grained</span> sparsity. K2 pushes further, with $k = 8$, $m = 384$. The table below compares these
 models to some of their contemporaries. 
 
 | Model | $m$ (total experts) | $k$ (active experts) | $s$ (expert sparsity) | $P$ (Total Params) | $P_a$ (Active Params) |
@@ -172,7 +180,7 @@ models to some of their contemporaries.
 | <span class="term">Kimi K2</span> | 384 | 8 | 48.0 | **1.04T** | **32B** |
 | <span class="term">DeepSeek-V3</span> | 256 | 8 | 32.0 | **671B** | **37B** |
 | <span class="term">GPT-OSS-120B</span> | 128 | 4 | 32.0 | **117B** | **5.1B** |
-| <span class="term">DeepSeek-V2</span> | 160 | 6 | ~26.7 | **236B** | **21B** |
+| <span class="term">DeepSeek-V2</span> | 160 | 6 | 26.7 | **236B** | **21B** |
 | <span class="term">Qwen3-235B</span> | 128 | 8 | 16.0 | **235B** | **22B** |
 | <span class="term">OLMoE</span> | 64 | 8 | 8.0 | **7B** | **1B** |
 | <span class="term">DBRX</span> | 16 | 4 | 4.0 | **132B** | **36B** |
@@ -198,7 +206,7 @@ computationally</span>, and that the primary bottlenecks come from today's infra
 novel hardware and algorithms, might we see models with 1000x or 10000x sparsity in the
 not-so-distant future?
 
-### 4.3 Spec Table
+### 5.3 Spec Table
 The table below summarizes several key aspects of DV3 and K2's architectures.
 
 | Dimension | Deepseek V3 | Kimi K2 |
@@ -223,8 +231,10 @@ The table below summarizes several key aspects of DV3 and K2's architectures.
 | **Parallelism Strategy** | **DualPipe** | **Interleaved 1F1B** |
 | **Memory Optimizations** | **Recompute**, **Reduced Precision**, **CPU Offload** | **Recompute**, **Reduced Precision**, **CPU Offload** |
 
-## 5. Communication & Memory Optimizations
-### 5.1 Training Parallelism & Communication
+---
+
+## 6. Communication Optimizations
+### 6.1 Training Parallelism & Communication
 Both models compose <span class="term">pipeline parallelism (PP)</span>, <span class="term">expert
 parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html)</span>.
 
@@ -266,52 +276,53 @@ by adopting "the smallest feasible EP parallelization strategy," partitioning ex
 per GPU, which implicitly smoothes load (even if load is imbalanced across experts, it has a higher
 probability of being balanced across GPUs, due to the law of large numbers).
 
-### 5.2 Hot Expert Replication (DV3)
+### 6.2 Hot Expert Replication (DV3)
 The basic idea of replication is that during inference, we can monitor online statistics of expert
 loads, and <span class="idea">redundantly deploy</span> high-load experts in a manner that balances
 load across GPUs without increasing inter-node communication. DV3 applies this strategy to the
 prefilling stage of inference specifically. It uses 32 redundant experts (out of 256 total), with
 each GPU hosting its 8 original experts plus 1 redundant expert.
 
-### 5.3 Custom Kernels
+### 6.3 Custom Kernels
 DV3 develops custom kernels using [PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing/) for efficient all-to-all communication. While
 specifics of this kernel are beyond the scope of this article, what stands out is the
 <span class="idea">extent of codesign</span>: the routing mechanism (dispersion bounding), cluster
 topology, pipeline schedule (DualPipe), and custom kernels are all jointly optimized.
 
-### 5.4 Memory Optimizations
-<span class="term">Activation Recomputation</span><br>
+---
+
+## 7. Memory Optimizations
+### 7.1 Activation Recomputation
 Activation recomputation is a standard idea in pretraining, wherein certain high-memory, low-compute
 layers are <span class="idea">recomputed</span> during the backwards pass rather than persisting
 their activations, effectively trading a little compute overhead for large memory savings. This is
-<span class="idea">particularly valuable for MoEs</span>, because:
-
-* MoEs by design have a high memory to compute ratio
-* Expert load-imbalance during early training could otherwise cause OOM crashes if we persisted
-all activations
+<span class="idea">particularly valuable for MoEs</span>, because they have a high memory to
+compute ratio by design, and because they are particularly vulnerable to OOMs due to load imbalance.
 
 K2 uses aggressive activation recomputation, applying it to LayerNorm, SwiGLU, MLA up-projections,
 and MoE down-projections. DV3 applies activation recomputation to RMSNorm and MLA up-projections. 
 
-<span class="term">CPU Offloading</span><br>
-The basic idea of CPU offloading is to move pieces of state computed on GPUs over to CPU RAM (or
-even compute them entirely on CPUs), where possible.
+### 7.2 CPU Offloading
+The basic idea of CPU offloading is to identify pieces of state that can be computed on GPUs then
+transferred to CPU RAM, or computed entirely on CPUs.
 
-For activations that are not recomputed, K2 offloads them to CPU RAM, using a custom streaming
-copy engine that overlaps with both compute and communication kernels in the 1F1B schedule.
+For activations that are not recomputed, K2 offloads them to CPU RAM, using a custom
+<span class="term">streaming copy engine</span> that overlaps with both compute and communication kernels in the 1F1B schedule.
 
 DV3 maintains an exponential moving average (EMA) of model parameters during training. Rather than
 storing these in GPU memory, these are stored in CPU memory, and <span class="idea">updated asynchronously</span>.
 
-<span class="term">KV Cache Reduction</span><br>
-Both DV3 and K2 reduce KV cache memory footprint via Multi-Head Latent Attention (MLA),
-discussed in the next subsection.
-
-<span class="term">Reduced Precision</span><br>
+### 7.3 Reduced Precision
 Both DV3 and K2 make extensive use of reduced precision. This is a large topic in its own right,
-and we'll leave a detailed treatment to a future article. 
+and we'll leave a detailed treatment to a future article.
 
-## 6. Non-MoE Techniques
+### 7.4 KV Cache Reduction
+Both DV3 and K2 reduce KV cache memory footprint via Multi-Head Latent Attention (MLA),
+briefly discussed in the next section.
+
+---
+
+## 8. Non-MoE Techniques
 Below we highlight a few other significant architectural innovations in K2 and DV3, that are not
 directly connected to sparsity but still highly influence overall efficiency.
 
@@ -331,7 +342,7 @@ K2’s training stability hinges on <span class="term">MuonClip</span>, which au
 class="idea">QK-clip</span> to prevent exploding attention logits. The paper reports 15.5T
 tokens of pretraining without loss spikes.
 
-## 7. Conclusion and Future Directions
+## 9. Conclusion and Future Directions
 TODO
 
 
