@@ -1,23 +1,24 @@
 
-# The Sparsity Frontier: Core Innovations in Kimi K2 and DeepSeek DV3
+# The Sparsity Frontier: Core Innovations in Kimi K2 and DeepSeek V3
 (NOTE: UNDER CONSTRUCTION)
 
 ## 1. Introduction
-A core design limitation of standard <span class="idea">dense</span> LLMs is the tight coupling between parameter count ("knowledge"), and per-token flop count (the amount of "work" required to generate a token), due to knowledge being diffuse across parameters rather than localized.
+A core design limitation of standard <span class="term">dense LLMs</span> is the tight coupling between parameter count ("knowledge"), and per-token flop count (the amount of "work" required to generate a token), due to knowledge being diffuse across parameters rather than localized.
 When we ask "what is the capital of Kenya?", we effectively pay for the LLM's
 proficiency in Medieval history, Korean literature, and quantum mechanics, despite the bounded scope
 of our question.
 
 A natural solution to this problem is <span class="idea">sparsity</span>: decouple memory and
-compute by selectively activating a <span class="idea">bounded subset</span> of parameters for each layer-token pair,
-thereby implicitly localizing knowledge. <span class="term">Mixture of Experts (MoE)</span> layers
+compute by selectively activating a <span class="idea">bounded subset</span> of parameters for each
+layer-token pair, thereby implicitly localizing knowledge. <span class="term">Mixture of Experts
+(MoE)</span> layers
 are a particular class of solutions in the design space of sparse architectures, and are the
 standard approach used today. 
 
 Despite its intuitive appeal, sparsity raises complex challenges: the imposition
 of discrete structural constraints on systems we train with continuous tools (backprop) on
-distributed hardware raises implications for modeling (optimization dynamics, manifold geometry), systems (increased inter-device communication, activation memory pressure, reduced data locality),
-and post-training (potential discrete shifts under distributional drift). Progress in
+distributed hardware raises implications for modeling (<span class="idea">optimization dynamics</span>, <span class="idea">manifold geometry</span>), systems (increased inter-device <span class="idea">communication</span>, activation <span class="idea">memory pressure</span>, reduced <span class="idea">data locality</span>),
+and post-training (potential <span class="idea">discrete shifts</span> under distributional drift). Progress in
 this area hence necessitates expertise in modeling and systems alike. In this article, we'll first frame these core challenges, and then explore how bleeding edge sparse
 models <span class="term">[DeepSeek V3](https://arxiv.org/abs/2412.19437)</span> and
 <span class="term">[Kimi K2](https://arxiv.org/abs/2507.20534)</span> address them while advancing
@@ -33,7 +34,7 @@ and how [distributed training](https://colossalai.org/docs/concepts/paradigms_of
 
 ### 2.2 Scope & Roadmap
 Kimi K2 and DeepSeek V3 introduce a number of innovations across data, pretraining, and 
-posttraining. In this article, we'll primarily focus on pretraining aspects directly connected to
+post-training. In this article, we'll primarily focus on pretraining aspects directly connected to
 MoEs and sparsity. In particular, we'll discuss:
 * Challenges with training large sparse models, and frames for reasoning about them (Section 3)
 * Core elements of Kimi K2 and Deepseek V3's sparsity architectures (Section 4)
@@ -123,13 +124,16 @@ with $m$ rather than $k$. As the K2 paper notes, "after reserving space for
 parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is insufficient to hold
 the full MoE activations."
 
-We'll see in Section 5 how K2 and DV3 address memory and communication challenges via reduced
-precision, activation recomputation, CPU offloading, novel pipeline schedules, caching, and others.
+We'll see in Section 5 how K2 and DV3 address memory and communication challenges via various
+techniques including reduced precision, activation recomputation, CPU offloading, novel pipeline
+schedules, caching, replication, and others.
 
 ### 3.4 Expert Specialization, Manifold Partitioning, and a Fishing Analogy
 TODO - refine
+
 Intuitively, a modeling design goal of MoE layers is for different experts to specialize to "cover"
 different parts of the input data manifold. A few potential failure modes include:
+
 * Under-specialization (several experts learning the same thing) 
 * "Dead experts" (some experts never getting selected by the router)
 * Load imbalance (some experts activating far more frequently than others)
@@ -160,8 +164,8 @@ In this section we'll examine the broad contours of the architectures of K2 and 
 
 ### 4.1 Expert Selection
 The high-level elements of K2 and DV3's MoE layer are fairly familiar: for each token, first compute
-token-expert affinities with a per-expert sigmoid, then apply top-k hard gating, then normalize
-scores based on affinities of selected experts. Both K2 and DV3 use one <span class="term">shared
+<span class="term">token-expert affinities</span> with a per-expert sigmoid, then apply <span class="term">top-k hard gating</span>, then normalize
+selected experts' affinities into <span class="term">scores</span>. Both K2 and DV3 use one <span class="term">shared
 expert</span> that is exempt from this scoring process (its score is fixed to 1). 
 
 DV3 introduces two core twists: <span class="term">auxiliary-free load balancing</span> via a bias
@@ -169,19 +173,17 @@ term (discussed in Part 2) and <span class="term">dispersion bounding</span>, di
 
 <span class="term">Dispersion Bounding (DV3)</span>
 
-Dispersion bounding explicitly caps how many <span class="idea">nodes</span> a single token may
+Dispersion bounding reduces inter-node communication by explicitly capping how many <span class="idea">nodes</span> a single token may
 touch in an MoE layer. Ordinary MoE routing simply selects the experts with the top $k$ scores. DV3
 constrains this selection so that the selected experts reside in <span class="idea">at most 4
 nodes</span>. Concretely, say we have 8 active experts, the top 7 scoring experts live on nodes
 $n_1, n_2, n_3, n_4$, and the 8th expert lives on a fifth node $n_5$. The 8th expert would be
 dropped and replaced by the next-highest scoring expert that lives on one of $n_1, n_2, n_3, n_4$.
 
-Dispersion bounding thus bounds the total amount of inter-node communication over slow InfiniBand.
-
 ### 4.2 Ultra Sparse Design
-DV3 uses $k = 8$, $m = 256$ (8 active experts out of 256 total, excluding fixed), for a sparsity
+DV3 uses $k = 8$, $m = 256$, $k_f = 1$ (8 active experts out of 256, plus one fixed), for a sparsity
 ratio of $s = 32$. Not only is this a high ratio, it is also very <span class="idea">fine-grained</span> sparsity. K2 pushes even further, with $k = 8$, $m = 384$. The table below compares these
-models to some of their contemporaries, and highlights why this is so impressive. 
+models to some of their contemporaries. 
 
 | Model | $m$ (total experts) | $k$ (active experts) | $s$ (expert sparsity) | $P$ (Total Params) | $P_a$ (Active Params) |
 | --- | ---: | ---: | ---: | ---: | ---: |
