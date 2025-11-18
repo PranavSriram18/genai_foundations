@@ -106,15 +106,18 @@ like compute, the amount of state we need to persist for the backward pass (besi
 themselves) scales with $k$, not $m$. A few issues complicate this picture. 
 
 <span class="term">Routing Metadata</span>
+
 Routing necessitates a lot of bookkeeping: top-k indices, permutation maps, and scatter/gather
 layouts to invert token dispatch for the backwards pass, plus moving averages/auxiliary terms for
 load balancing. This is still $O(kT)$, but nontrivial overhead nonetheless. 
 
 <span class="term">Comms Buffers</span>
+
 Under expert parallelism, tokens are packed into per-destination fixed-capacity send/recv buffers.
 Padding becomes significant under imbalanced loads, particularly early in training.
 
 <span class="term">Optimizer State</span> 
+
 Modern learning algorithms like Muon or Adam require per-parameter additional state, which grows
 with $m$ rather than $k$. As the K2 paper notes, "after reserving space for
 parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is insufficient to hold
@@ -165,6 +168,7 @@ DV3 introduces two core twists: <span class="term">auxiliary-free load balancing
 term (discussed in Part 2) and <span class="term">dispersion bounding</span>, discussed below.
 
 <span class="term">Dispersion Bounding (DV3)</span>
+
 Dispersion bounding explicitly caps how many <span class="idea">nodes</span> a single token may
 touch in an MoE layer. Ordinary MoE routing simply selects the experts with the top $k$ scores. DV3
 constrains this selection so that the selected experts reside in <span class="idea">at most 4
@@ -192,7 +196,10 @@ models to some of their contemporaries, and highlights why this is so impressive
 | <span class="term">Mixtral 8x22B</span> | 8 | 2 | 4.0 | **141B** | **~39B** |
 | <span class="term">Llama 3.1 405B</span> | 1 | 1 | 1.0 | **405B** | **405B** |
 
+TODO - switch transformer and other google models?
+
 <span class="term">Sparsity Scaling Laws</span>
+
 The K2 paper develops an empirical <span class="idea">Sparsity Scaling Law</span>, in which they
 observe:
 
@@ -238,6 +245,7 @@ Both models compose <span class="term">pipeline parallelism (PP)</span>, <span c
 parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html)</span>.
 
 <span class="term">No Tensor Parallelism</span>
+
 As we saw in Section 3.1, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
 fine-grained sparsity, is to <span class="idea">remove tensor parallelism</span>. The DV3 paper
@@ -245,10 +253,12 @@ explicitly mentions removing tensor parallelism during training, and the K2 pape
 using tensor parallelism.
 
 <span class="term">DualPipe (DV3)</span>
+
 DV3 also introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
 overlap communication and computation
 <span class="idea">within a paired forward-backward channel</span>. Specifically, DualPipe splits
 each layer into substages:
+
 * Forward: attention, dispatch, MLP, combine 
 * Backwards: combine, MLP (weights), MLP (inputs), dispatch, attention (weights), attention (inputs)
 
@@ -261,6 +271,7 @@ to the weight replication.
 (TODO - insert pipeline figure)
 
 <span class="term">Interleaved 1F1B (K2)</span>
+
 K2's authors cite DualPipe’s extra parameter and gradient memory footprint as prohibitive for
 scaling to a trillion parameters, and stick to
 [interleaved 1F1B](https://colossalai.org/docs/features/pipeline_parallel/), an existing method
@@ -290,6 +301,7 @@ topology, pipeline schedule (DualPipe), and custom kernels are all jointly optim
 
 ### 5.4 Memory Optimizations
 <span class="term">Activation Recomputation</span>
+
 Activation recomputation is a standard idea in pretraining, wherein certain high-memory, low-compute
 layers are <span class="idea">recomputed</span> during the backwards pass rather than persisting
 their activations, effectively trading a little compute overhead for large memory savings. This is
@@ -302,6 +314,7 @@ K2 uses aggressive activation recomputation, applying it to LayerNorm, SwiGLU, M
 and MoE down-projections. DV3 applies activation recomputation to RMSNorm and MLA up-projections. 
 
 <span class="term">CPU Offloading</span>
+
 The basic idea of CPU offloading is to move pieces of state computed on GPUs over to CPU RAM (or
 even compute them entirely on CPUs), where possible.
 
@@ -312,10 +325,12 @@ DV3 maintains an exponential moving average (EMA) of model parameters during tra
 storing these in GPU memory, these are stored in CPU memory, and <span class="idea">updated asynchronously</span>.
 
 <span class="term">KV Cache Reduction</span>
+
 Both DV3 and K2 reduce KV cache memory footprint via Multi-Head Latent Attention (MLA), discussed in
 the next subsection.
 
 <span class="term">Reduced Precision</span>
+
 Both DV3 and K2 make extensive use of reduced precision. This is a large topic in its own right,
 and we'll leave a detailed treatment to a future article. 
 
@@ -324,16 +339,19 @@ Below we highlight a few other significant architectural innovations in K2 and D
 directly connected to sparsity but still highly influence overall efficiency.
 
 <span class="term">Multi-Token Prediction (DV3)</span>
+
 DV3 trains the model to the next two tokens simultaneously, as opposed to single next token
 prediction. During inference, this prediction can be used for speculative decoding, enabling a
 ~1.8x TPS speedup in practice.
 
 <span class="term">MLA (DV3 and K2)</span>
+
 Both DV3 and K2 use <span class="term">Multi-head Latent Attention</span>, a novel attention
 mechanism introduced by DV3. MLA factors attention through a lower-dim latent and caches this latent
 during inference, cutting KV size and memory traffic without accuracy regressions.
 
 <span class="term">MuonClip (K2)</span>
+
 K2’s training stability hinges on <span class="term">MuonClip</span>, which augments the
 [Muon](https://jeremybernste.in/writing/deriving-muon) algorithm with a <span class="idea">QK-clip</span> to prevent exploding
 attention logits. The paper reports 15.5T tokens of pretraining without loss spikes.
