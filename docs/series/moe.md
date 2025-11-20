@@ -3,23 +3,23 @@
 (NOTE: UNDER CONSTRUCTION)
 
 ## 1. Introduction
-A core design limitation of standard <span class="term">dense LLMs</span> is the tight coupling between parameter count ("knowledge"), and per-token flop count (the amount of "work" required to generate a token), due to knowledge being diffuse across parameters rather than localized.
+A core design limitation of standard <span class="term">dense LLMs</span> is the tight coupling between parameter count ("knowledge") and per-token FLOP count (the amount of "work" required to
+generate a token), due to knowledge being diffuse across parameters rather than localized.
 When we ask "what is the capital of Kenya?", we effectively pay for the LLM's
 proficiency in Medieval history, Korean literature, and quantum mechanics, despite the bounded scope
 of our question.
 
-A natural solution to this problem is <span class="idea">sparsity</span>: decouple memory and
-compute by selectively activating a <span class="idea">bounded subset</span> of parameters for each
-layer-token pair, thereby implicitly localizing knowledge. <span class="term">Mixture of Experts
-(MoE)</span> layers
-are a particular class of solutions in the design space of sparse architectures, and are the
-standard approach used today. 
+A natural solution to this problem is <span class="idea">sparsity</span>: selectively activate a
+<span class="idea">bounded subset</span> of parameters for each token, thereby decoupling memory and
+compute and implicitly localizing knowledge. <span class="term">Mixture of Experts
+(MoE)</span> layers are a form of structured sparsity, and are the standard approach used today. 
 
 Despite its intuitive appeal, sparsity raises complex challenges: the imposition
 of discrete structural constraints on systems we train with continuous tools (backprop) on
-distributed hardware raises implications for modeling (<span class="idea">optimization dynamics</span>, <span class="idea">manifold geometry</span>), systems (increased inter-device <span class="idea">communication</span>, activation <span class="idea">memory pressure</span>, reduced <span class="idea">data locality</span>),
-and post-training (potential <span class="idea">discrete shifts</span> under distributional drift). Progress in
-this area hence necessitates expertise in modeling and systems alike. In this article, we'll first frame these core challenges, and then explore how bleeding edge sparse
+distributed hardware originally built for dense matrix math raises implications for modeling (<span class="idea">optimization dynamics</span>, <span class="idea">manifold geometry</span>), systems (increased inter-device <span class="idea">communication</span>, <span class="idea">memory pressure</span>), and post-training (potential <span class="idea">discrete shifts</span> under distributional drift). Progress in
+this area hence necessitates advances in modeling and systems alike.
+
+In this article, we'll first frame these core challenges, and then explore how bleeding-edge sparse
 models <span class="term">[DeepSeek V3](https://arxiv.org/abs/2412.19437)</span> and
 <span class="term">[Kimi K2](https://arxiv.org/abs/2507.20534)</span> address them while advancing
 the frontier of sparsity.
@@ -41,9 +41,8 @@ MoEs and sparsity. In particular, we'll discuss:
 * Core elements of Kimi K2 and Deepseek V3's sparsity architectures (Section 5)
 * Several innovations in K2 and DV3 that address specific sparsity challenges (Sections 6-8)
 
-This article will mostly focus on systems innovations (and systems-modeling codesign). We'll cover
+This article will mostly focus on systems innovations and systems-modeling codesign. We'll cover
 a very interesting pure modeling piece (auxiliary-free load balancing in Deepseek V3) in Part 2.
-
 
 ### 2.3 Notation
 We consider MoE layers with input dimension <span class="term">$D$</span>,
@@ -57,37 +56,41 @@ way to skim this article is to follow the colored words.
 
 ## 3. Systems Challenges for Sparsity
 ### 3.1 High Level Framing
-A general design goal in modern pipeline-parallel distributed training is to hide latency by
-scheduling compute precisely to overlap with communication; hence anything that increases
-communication or makes it less predictable poses a challenge.
+A general design goal in modern distributed training is to hide latency by scheduling compute
+to overlap with communication; hence anything that increases communication or makes it less
+predictable poses a challenge.
 
-Sparsity allows flop count to scale sublinearly in parameter count, but those parameters still need
-to live somewhere, so memory (and hence the number of devices) still grow linearly in parameter
-count. Hence sparsity effectively shifts the burden from
-<span class="idea">compute</span> to <span class="idea">memory</span> and inter-device <span class="idea">communication</span>. As we'll see, the resulting systems challenges are tightly
-coupled to architectural choices.
+Sparsity lets FLOP count sublinearly with parameter count, but parameters still need to live
+somewhere, so total memory - and hence device count - scales roughly linearly with parameters.
+Sparsity effectively shifts the burden from
+<span class="idea">compute</span> to <span class="idea">memory</span> and
+<span class="idea">communication</span>, with negative implications for
+[arithmetic intensity](https://modal.com/gpu-glossary/perf/arithmetic-intensity) if not
+mitigated. As we'll see, the resulting systems challenges are tightly coupled to architectural
+choices, meaning model designers cannot simply abstract away infrastructure details, resulting in a rich surface area for infrastructure-architecture codesign. 
 
 ### 3.2 Dynamic Dispatch
-Expert parallelism shards the $m$ experts across $d$ devices. The choice of which expert processes
-which token is a function of the token, tokens must be
-<span class="term">dynamically dispatched</span> to experts. Mechanically, this involves packing tokens into contiguous <span class="term">send
-buffers</span> (with padding for aligmment), exchange via <span class="term">all-to-all dispatch</span>,
-processing as small <span class="term">GEMM</span> batches, and finally unpacking to the original order via
-<span class="term">all-to-all reduction</span>. This communication pattern raises several potential
-issues, including imbalanced loads, fragmented memory access, scattered gathers, small kernels, and
-poor cache locality. 
+<span class="term">Expert parallelism</span> partitions the $m$ experts across $d$ devices. The
+choice of which expert processes which token is a function of the token, so tokens must be
+<span class="term">dynamically dispatched</span> to experts. Mechanically, this involves packing tokens into contiguous per-destination <span class="term">send
+buffers</span> (with padding for alignment), exchange via <span class="term">all-to-all dispatch</span>,
+processing as <span class="term">batched small GEMMs</span>, and finally another <span class="term">all-to-all</span> to unpermute to the original order. Communication is
+overlapped with computation via <span class="term">double buffering</span>.
+
+This communication pattern raises several potential issues, including imbalanced loads, fragmented
+memory access, scattered gathers, small kernels, and poor cache locality.
 
 ### 3.3 Intra-Node vs Inter-Node Communication
-GPUs in training clusters are organized into <span class="term">nodes</span>. A node is typically a
-single server containing multiple GPUs (often 8 or 16), and GPUs in the same node communicate via
-<span class="term">NVLink</span> or <span class="term">NVSwitch</span>, while communication across
+GPU training clusters are composed of <span class="term">nodes</span>, each of which is a server
+typically containing 8-16 GPUs. Within a node, GPUs communicate via
+<span class="term">NVLink</span> or <span class="term">NVSwitch</span>, whereas communication across
 nodes uses <span class="term">InfiniBand</span> or <span class="term">RoCE</span>. These have very
 different bandwidths: NVLink provides up to ~1.8 TB/s per GPU on Blackwell (bidirectional, per GPU),
 while InfiniBand offers ~100 GB/s per port (XDR 800), typically aggregated over multiple ports per
 node. The implication for model designers is that communication costs are <span
-class="idea">heterogeneous</span>, which motivates thinking of experts not just in isolation, but
+class="idea">heterogeneous</span>. This motivates thinking of experts not just in isolation, but
 potentially defining <span class="idea">topology-aware groupings</span> of experts based on physical
-colocation. We'll see in Sections 4.1 and 5.2 how <span class="term">dispersion bounding</span> and
+colocation. We'll see in Sections 5.1 and 6.3 how <span class="term">dispersion bounding</span> and
 <span class="term">hot expert replication</span> are concrete instances of this idea.
 
 ### 3.4 Memory Pressure
@@ -97,29 +100,29 @@ themselves) scales with $k$, not $m$. A few issues complicate this picture.
 
 <span class="term">Routing Metadata</span><br>
 Routing necessitates a lot of bookkeeping: top-k indices, permutation maps, and scatter/gather
-layouts to invert token dispatch for the backwards pass, plus auxiliary terms for load balancing.
-This is still $O(kT)$, but nontrivial overhead nonetheless. 
+layouts to invert token dispatch for the backward pass, plus auxiliary terms for load balancing.
+This is still $O(kT)$ per layer, but nontrivial overhead nonetheless. 
 
 <span class="term">Comms Buffers</span><br>
-Under expert parallelism, tokens are packed into per-destination fixed-capacity send/recv buffers.
-Padding becomes significant under imbalanced loads, particularly early in training.
+Padding in send/recv buffers becomes significant under imbalanced loads and small per-expert
+batches, especially early in training; double buffering increases the peak footprint.
 
 <span class="term">Optimizer State</span><br>
-Algorithms like Muon and Adam require per-parameter additional state, which grows
-with $m$ rather than $k$. The K2 paper notes, "*after reserving space for
-parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is insufficient to hold
-the full MoE activations.*"
+Algorithms like Muon and Adam require per-parameter additional state, which grows with $m$ rather
+than $k$, and is typically FP32 even if weights are reduced precision. The K2 paper notes, "*after
+reserving space for parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is
+insufficient to hold the full MoE activations.*"
 
-In addition to total memory, load imbalances (especially early in training) can tip high-load GPUs
-over their individual limits, causing OOM crashes.
+<span class="term">Load Imbalance</span><br>
+In addition to *total* memory, load imbalances can tip high-load GPUs over their individual limits, causing OOM crashes.
 
-We'll see in Sections 6 and 7 how K2 and DV3 address memory and communication challenges via various
-techniques including reduced precision, activation recomputation, CPU offloading, novel pipeline
-schedules, caching, replication, and others.
+We'll see in Sections 5-8 how K2 and DV3 address memory and communication challenges via various
+techniques including dispersion bounding, novel pipeline schedules, replication, caching, reduced
+precision, activation recomputation, CPU offloading, and others.
 
 ---
 
-## 4. Modeling Challenges: Expert Specialization, Manifold Partitioning, and a Fishing Analogy
+## 4. Modeling Challenges: Expert Specialization, Manifold Partitioning, and a Fishing Analogy (Optional Section)
 Intuitively, a modeling design goal of MoE layers is for different experts to specialize to "cover"
 different parts of the input data manifold. A few potential failure modes include:
 
@@ -161,8 +164,7 @@ expert</span> that is exempt from this scoring process (its score is fixed to 1)
 DV3 introduces two core twists: <span class="term">auxiliary-free load balancing</span> via a bias
 term (discussed in Part 2) and <span class="term">dispersion bounding</span>.
 
-<span class="term">Dispersion Bounding (DV3)</span>
-
+<span class="term">Dispersion Bounding (DV3)</span><br>
 Dispersion bounding reduces inter-node communication by explicitly capping how many <span class="idea">nodes</span> a single token may
 touch in an MoE layer. Ordinary MoE routing simply selects the experts with the top $k$ scores. DV3
 constrains this selection so that the selected experts reside in <span class="idea">at most 4
@@ -172,26 +174,33 @@ dropped and replaced by the next-highest scoring expert that lives on one of $n_
 
 ### 5.2 Ultra Sparse Design
 DV3 uses $k = 8$, $m = 256$, $k_f = 1$ (8 active out of 256, 1 fixed), for a sparsity
-ratio of $s = 32$. This is not only a high ratio, but also very <span class="idea">fine-grained</span> sparsity. K2 pushes further, with $k = 8$, $m = 384$. The table below compares these
-models to some of their contemporaries. 
+ratio of $s = 32$. K2 pushes further, with $k = 8$, $m = 384$. This is not only a high ratio, but
+also very <span class="idea">fine-grained</span> sparsity. The table below compares these
+models to some of their contemporaries whose specs are public. 
 
-| Model | $m$ (total experts) | $k$ (active experts) | $s$ (expert sparsity) | $P$ (Total Params) | $P_a$ (Active Params) |
+| Model | Year | $m$ (total experts) | $k$ (active experts) | $s$ (expert sparsity) | $P$ (Total Params) | $P_a$ (Active Params) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| <span class="term">Kimi K2</span> | 384 | 8 | 48.0 | **1.04T** | **32B** |
-| <span class="term">DeepSeek-V3</span> | 256 | 8 | 32.0 | **671B** | **37B** |
-| <span class="term">GPT-OSS-120B</span> | 128 | 4 | 32.0 | **117B** | **5.1B** |
-| <span class="term">DeepSeek-V2</span> | 160 | 6 | 26.7 | **236B** | **21B** |
-| <span class="term">Qwen3-235B</span> | 128 | 8 | 16.0 | **235B** | **22B** |
-| <span class="term">OLMoE</span> | 64 | 8 | 8.0 | **7B** | **1B** |
-| <span class="term">DBRX</span> | 16 | 4 | 4.0 | **132B** | **36B** |
-| <span class="term">Grok-1</span> | 8 | 2 | 4.0 | **314B** | **~78.5B** |
-| <span class="term">Mixtral 8x22B</span> | 8 | 2 | 4.0 | **141B** | **~39B** |
+| <span class="term">Kimi K2</span> | 2025 | 384 | 8 | 48.0 | **1.04T** | **32B** |
+| <span class="term">DeepSeek-V3</span> | 2024 | 256 | 8 | 32.0 | **671B** | **37B** |
+| <span class="term">Qwen3-235B</span> | 2025 | 128 | 8 | 16.0 | **235B** | **22B** |
+| <span class="term">GPT-OSS-120B</span> | 2025 | 128 | 4 | 32.0 | **117B** | **5.1B** |
+| <span class="term">DeepSeek-V2</span> | 2024 | 160 | 6 | 26.7 | **236B** | **21B** |
+| <span class="term">Switch-C</span> | 2021 | 2048 | 1 | 2048.0 | **1.57T** |  **13B** |
+| <span class="term">OLMoE</span> | 2024 | 64 | 8 | 8.0 | **7.0B** | **1.3B** |
+| <span class="term">DBRX</span> | 2024 | 16 | 4 | 4.0 | **132B** | **36B** |
+| <span class="term">Grok-1</span> | 2024 | 8 | 2 | 4.0 | **314B** | **~86B** |
+| <span class="term">Mixtral 8x22B</span> | 2024 | 8 | 2 | 4.0 | **141B** | **~39B** |
 | <span class="term">Llama 3.1 405B</span> | 1 | 1 | 1.0 | **405B** | **405B** |
 
-TODO - switch transformer and other google models?
+K2 and DV3 push sparsity further than all their contemporaries, besides Google's Switch Transformer
+(Switch-C), which was ahead of its time and an outlier in every dimension in this table. My sense is
+that the representational weaknesses of $k=1$ outweigh the systems simplifications it brings, and
+the industry has moved towards $k$ in the 2-8 range. I would not be surprised if future models
+actually <span class="idea">raise</span> $k$, and push $s$ by raising $m$ and decreasing expert
+width $b$, i.e. pursuing finer grained sparsity rather than just fewer active experts. We'll defer
+a deeper discussion of the representational implications of this to a future article.
 
-<span class="term">Sparsity Scaling Laws</span>
-
+### 5.3 Sparsity Scaling Laws
 The K2 paper develops an empirical <span class="idea">Sparsity Scaling Law</span>, in which they
 observe:
 
@@ -206,7 +215,7 @@ computationally</span>, and that the primary bottlenecks come from today's infra
 novel hardware and algorithms, might we see models with 1000x or 10000x sparsity in the
 not-so-distant future?
 
-### 5.3 Spec Table
+### 5.4 Spec Table
 The table below summarizes several key aspects of DV3 and K2's architectures.
 
 | Dimension | Deepseek V3 | Kimi K2 |
@@ -224,7 +233,7 @@ The table below summarizes several key aspects of DV3 and K2's architectures.
 | **Shared Experts ($k_f$)**| **1** | **1** |
 | **Expert width ($b$)** | **2048** | **2048** |
 | **Learning algorithm** | **AdamW** | **MuonClip** |
-| **Routing control** | **Aux-loss-free dynamic bias** + lightweight **sequence-level** safeguard | **Simple top-k** (no grouping, no in-gate balancing) |
+| **Routing control** | **Aux-loss-free dynamic bias** + lightweight **sequence-level** safeguard | **Simple top-k** (no grouping, no in-gate balancing) + **standard aux losses** |
 | **Dispersion control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit; implicit via low EP** |
 | **Attention Mechanism** | **MLA** | **MLA** |
 | **Attention Heads**  | **128** | **64** |
@@ -234,25 +243,25 @@ The table below summarizes several key aspects of DV3 and K2's architectures.
 ---
 
 ## 6. Communication Optimizations
-### 6.1 Training Parallelism & Communication
+### 6.1 Forms of Parallelism
 Both models compose <span class="term">pipeline parallelism (PP)</span>, <span class="term">expert
 parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html)</span>.
 
-<span class="term">No Tensor Parallelism</span><br>
 As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
 fine-grained sparsity, is to <span class="idea">remove tensor parallelism</span>. The DV3 paper
 explicitly mentions removing tensor parallelism during training, and the K2 paper does not mention
 using tensor parallelism.
 
+### 6.2 Pipeline Schedules
 <span class="term">DualPipe (DV3)</span><br>
-DV3 also introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
+DV3 introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
 overlap communication and computation
 <span class="idea">within a paired forward-backward channel</span>. Specifically, DualPipe splits
 each layer into substages:
 
 * Forward: attention, dispatch, MLP, combine 
-* Backwards: combine, MLP (weights), MLP (inputs), dispatch, attention (weights), attention (inputs)
+* Backward: same, but attention and MLP further split into `dInput` and `dWeight`
 
 Each stage maintains two in-flight parameter/gradient residencies so a forward channel and a
 backward channel can run concurrently without blocking on the same weights. With careful reordering,
@@ -260,14 +269,14 @@ DualPipe overlaps nearly all communication (MoE + pipeline) under compute, as il
 figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due
 to the weight replication.
 
-(TODO - insert pipeline figure)
+![pipeline_figure](../img/post1/moe_pipeline.svg)
 
 <span class="term">Interleaved 1F1B (K2)</span><br>
 K2's authors cite DualPipe’s extra parameter and gradient memory footprint as prohibitive for
 scaling to a trillion parameters, and stick to
 [interleaved 1F1B](https://colossalai.org/docs/features/pipeline_parallel/), an existing method
-in which each stage alternates one forward and one backward microbatch, with a single parameter
-copy. 
+in which each stage alternates one forward and one backward microbatch. Unlike DualPipe, 1F1B does
+not require an extra copy of parameters.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
 reduce expert-parallel communication in order for it not to dominate during 1F1B. K2 achieves this
@@ -276,14 +285,14 @@ by adopting "the smallest feasible EP parallelization strategy," partitioning ex
 per GPU, which implicitly smoothes load (even if load is imbalanced across experts, it has a higher
 probability of being balanced across GPUs, due to the law of large numbers).
 
-### 6.2 Hot Expert Replication (DV3)
+### 6.3 Inference: Hot Expert Replication (DV3)
 The basic idea of replication is that during inference, we can monitor online statistics of expert
 loads, and <span class="idea">redundantly deploy</span> high-load experts in a manner that balances
 load across GPUs without increasing inter-node communication. DV3 applies this strategy to the
-prefilling stage of inference specifically. It uses 32 redundant experts (out of 256 total), with
-each GPU hosting its 8 original experts plus 1 redundant expert.
+prefilling stage of inference specifically. It uses 32 redundant experts (out of $m=256$ total),
+with each GPU hosting its 8 original experts plus 1 redundant expert.
 
-### 6.3 Custom Kernels
+### 6.4 Custom Kernels
 DV3 develops custom kernels using [PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing/) for efficient all-to-all communication. While
 specifics of this kernel are beyond the scope of this article, what stands out is the
 <span class="idea">extent of codesign</span>: the routing mechanism (dispersion bounding), cluster
@@ -294,7 +303,7 @@ topology, pipeline schedule (DualPipe), and custom kernels are all jointly optim
 ## 7. Memory Optimizations
 ### 7.1 Activation Recomputation
 Activation recomputation is a standard idea in pretraining, wherein certain high-memory, low-compute
-layers are <span class="idea">recomputed</span> during the backwards pass rather than persisting
+layers are <span class="idea">recomputed</span> during the backward pass rather than persisting
 their activations, effectively trading a little compute overhead for large memory savings. This is
 <span class="idea">particularly valuable for MoEs</span>, because they have a high memory to
 compute ratio by design, and because they are particularly vulnerable to OOMs due to load imbalance.
@@ -342,7 +351,10 @@ K2’s training stability hinges on <span class="term">MuonClip</span>, which au
 class="idea">QK-clip</span> to prevent exploding attention logits. The paper reports 15.5T
 tokens of pretraining without loss spikes.
 
-## 9. Conclusion and Future Directions
-TODO
-
-
+## 9. Reflections
+TODO - complete
+I started this article intending to write a short note on what I anticipated would be a few key
+ideas. As I dove in, the extent of detail and innovation in the K2 and DV3 papers was quite
+striking - about 10 pages of writing later and I feel like I've barely scratched the surface! I was
+particularly struck by the extent of model-infrastructure codesign, and think this portends some
+interesting things for the future.
