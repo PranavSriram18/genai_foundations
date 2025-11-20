@@ -269,7 +269,7 @@ DualPipe overlaps nearly all communication (MoE + pipeline) under compute, as il
 figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due
 to the weight replication.
 
-![pipeline_figure](../img/post1/moe_pipeline.svg)
+![pipeline_figure](../img/post1/moe_pipeline.png)
 
 <span class="term">Interleaved 1F1B (K2)</span><br>
 K2's authors cite DualPipe’s extra parameter and gradient memory footprint as prohibitive for
