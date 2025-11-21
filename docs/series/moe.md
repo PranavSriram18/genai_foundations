@@ -16,7 +16,9 @@ compute and implicitly localizing knowledge. <span class="term">Mixture of Exper
 
 Despite its intuitive appeal, sparsity raises complex challenges. Sparsity imposes
 *discrete* structural constraints on systems we train with *continuous* tools (backprop) on
-distributed hardware originally built for dense matrix math, raising implications for both modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased communication, memory pressure, fragmentation).
+distributed hardware originally built for *dense* matrix math, raising implications for both
+modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased
+communication, fragmentation, memory pressure).
 
 In this article, we'll first frame these core challenges, and then explore how bleeding-edge sparse
 models <span class="term">[DeepSeek V3](https://arxiv.org/abs/2412.19437)</span> and
@@ -63,9 +65,8 @@ predictable poses a challenge.
 
 Sparsity lets FLOP count scale sublinearly with parameter count, but those parameters still need to
 live somewhere. Total memory, and hence device count, scale roughly linearly with parameters.
-Sparsity effectively shifts the burden from
-<span class="idea">compute</span> to <span class="idea">memory</span> and
-<span class="idea">communication</span>, with negative implications for
+Sparsity effectively <span class="idea">shifts the burden from
+compute to memory and communication</span>, with negative implications for
 [arithmetic intensity](https://modal.com/gpu-glossary/perf/arithmetic-intensity) if not
 mitigated. As we'll see, the resulting systems challenges are tightly coupled to architectural
 choices, meaning model designers cannot simply abstract away infrastructure details. This creates a
@@ -85,13 +86,13 @@ memory access, small kernels, and poor cache locality.
 ### 3.3 Intra-Node vs Inter-Node Communication
 GPU training clusters are composed of <span class="term">nodes</span>, each of which is a server
 typically containing 8-16 GPUs. Within a node, GPUs communicate via
-<span class="term">NVLink</span> or <span class="term">NVSwitch</span>, whereas communication across
-nodes uses <span class="term">InfiniBand</span> or <span class="term">RoCE</span>. These have very
+<span class="term">NVLink</span> or NVSwitch, whereas communication across
+nodes uses <span class="term">InfiniBand</span> or RoCE. These have very
 different bandwidths: NVLink offers ~1.8 TB/s bidirectional per GPU on Blackwell,
 while InfiniBand (XDR 800) offers ~100 GB/s per port, typically aggregated over 2-8 ports per
-node. The implication for model designers is that communication costs are <span
-class="idea">heterogeneous</span>. This motivates thinking of experts not just in isolation, but
-potentially defining <span class="idea">topology-aware groupings</span> of experts based on physical
+node. The implication for model designers is that <span
+class="idea">communication costs are heterogeneous</span>. This motivates thinking of experts not just in isolation, but
+potentially as part of <span class="idea">topology-aware groupings</span> based on physical
 colocation. We'll see <span class="term">dispersion bounding</span> (Section 5.1) and
 <span class="term">hot expert replication</span> (Section 6.3) as concrete instances of this idea.
 
@@ -297,8 +298,8 @@ not require an extra copy of parameters.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
 reduce expert communication in order for it not to dominate during 1F1B. K2 achieves this
-by adopting "*the smallest feasible EP parallelization strategy,*" partitioning experts across just
-16 devices. Note that lower EP implies more experts
+by adopting "<span class="idea">the smallest feasible EP parallelization strategy</span>,"
+partitioning experts across just 16 devices. Note that lower EP implies more experts
 per GPU, which implicitly smooths load (even under *expert* imbalance, there's a higher
 likelihood of *GPU* balance, due to the law of large numbers).
 
@@ -374,7 +375,7 @@ I was particularly struck by the extent of model-infra codesign. I've long felt 
 researcher-engineer dichotomy is contrived, and that progress in AI will come from teams that
 deeply understand both abstract ideas and the physical systems that implement them.
 
-I've been interested in sparsity as a theme since I first read about compressed sensing as a
+I've been interested in sparsity as a theme since I first read about compressed sensing as a college
 freshman in 2014. For many years, sparsity has remained something of an afterthought in ML, largely
 due to the challenges of getting it to work efficiently on hardware originally built for dense
 matrix math. It's great to see sparsity become a mainstay in SOTA deep learning models, and
