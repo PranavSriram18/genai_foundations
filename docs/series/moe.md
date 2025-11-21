@@ -14,6 +14,8 @@ A natural solution to this problem is <span class="idea">sparsity</span>: select
 compute and implicitly localizing knowledge. <span class="term">Mixture of Experts
 (MoE)</span> layers are a form of structured sparsity, and are the standard approach used today. 
 
+![Headline](../img/post1/headline.svg)
+
 Despite its intuitive appeal, sparsity raises complex challenges. Sparsity imposes
 *discrete* structural constraints on systems we train with *continuous* tools (backprop) on
 distributed hardware originally built for *dense* matrix math, raising implications for both
@@ -48,7 +50,7 @@ a very interesting pure modeling piece (auxiliary-free load balancing in DeepSee
 
 ### 2.3 Notation
 We consider MoE layers with input dimension <span class="term">$D$</span>,
-<span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). We'll let <span class="term">$k_f$</span> denote the number of
+<span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). Let <span class="term">$k_f$</span> denote the number of
 shared/fixed experts ($m$ and $k$ refer only to non-shared), and <span class="term">$T$</span> the
 context length. (See the spec table in Section 5.4 for a full list of symbols used across the article.) We'll use <span class="term">DV3</span> and <span class="term">K2</span> as shorthand for
 DeepSeek V3 and Kimi K2. Key terms are highlighted in <span class="term">blue</span>,
@@ -64,7 +66,7 @@ to <span class="idea">overlap</span> with communication; hence anything that inc
 predictable poses a challenge.
 
 Sparsity lets FLOP count scale sublinearly with parameter count, but those parameters still need to
-live somewhere. Total memory, and hence device count, scale roughly linearly with parameters.
+live somewhere. Total memory, and hence device count, scales roughly linearly with parameters.
 Sparsity effectively <span class="idea">shifts the burden from
 compute to memory and communication</span>, with negative implications for
 [arithmetic intensity](https://modal.com/gpu-glossary/perf/arithmetic-intensity) if not
@@ -97,8 +99,8 @@ colocation. We'll see <span class="term">dispersion bounding</span> (Section 5.1
 <span class="term">hot expert replication</span> (Section 6.3) as concrete instances of this idea.
 
 ### 3.4 Memory Pressure
-In MoE layers, gradients don't flow to non-selected experts, so at first glance, it should seem that
-like compute, the amount of state we need to persist for the backward pass (besides weights
+In MoE layers, gradients don't flow to non-selected experts. Hence at first glance, it should seem
+that, like compute, the amount of state we need to persist for the backward pass (besides weights
 themselves) scales with $k$, not $m$. A few issues complicate this picture. 
 
 <span class="term">Routing Metadata</span><br>
@@ -120,7 +122,7 @@ insufficient to hold the full MoE activations.*"
 In addition to *total* memory, load imbalances can tip high-load GPUs over their individual limits, causing OOM crashes.
 
 
-We'll see in Sections 5-8 how K2 and DV3 address systems challenges via various
+Sections 5-8 explore how K2 and DV3 address the challenges raised in this section via various
 techniques including dispersion bounding, novel pipeline schedules, replication, caching, reduced
 precision, activation recomputation, CPU offloading, and others.
 
@@ -155,8 +157,8 @@ who discovers a populated lake with 100 fish, becomes disproportionately wealthy
 <span class="idea">without any redistributive mechanism</span> (discrete routing creating a "rich
 get richer" phenomenon).
 
-Of course, this thought experiment is a significant simplication and not an exact representation of
-the actual dynamics of MoE optimization, but it serves to illustrate the central tension between
+Of course, this thought experiment is a significant simplification and not an exact representation
+of the actual dynamics of MoE optimization, but it serves to illustrate the central tension between
 gradient-based optimization and the discrete structure imposed by sparsity. These issues make
 training MoEs tricky, necessitating careful
 <span class="term">auxiliary losses/regularizers</span> to ensure proper specialization and load balancing, plus monitoring during
@@ -212,7 +214,7 @@ K2 and DV3 push sparsity further than their contemporaries, with one notable exc
 <span class="term">Switch Transformer</span> is an outlier along every dimension in this table, and
 was in many
 ways ahead of its time. My sense is that the representational weaknesses of the $k=1$ design tend to
-outweigh the its systems benefits, leading most modern MoEs to use $k \in [2, 8]$. I wouldn't
+outweigh its systems benefits, leading most modern MoEs to use $k \in [2, 8]$. I wouldn't
 be surprised if future models actually <span class="idea">raise $k$</span>, and push $s$ by
 raising $m$ and decreasing expert width $b$, i.e. <span class="idea">pursuing finer-grained sparsity</span> rather than just 
 fewer active experts. We'll defer a deeper discussion of the representational implications of this
@@ -234,8 +236,8 @@ novel hardware and algorithms, might we see models with 1000x or 10000x sparsity
 not-so-distant future?
 
 ### 5.4 Spec Table
-The table below summarizes several key aspects of DV3 and K2's architectures. We'll discuss many
-of these in subsequent sections.
+The table below summarizes several key aspects of DV3 and K2's architectures. Many of these are
+discussed in subsequent sections.
 
 | Dimension | DeepSeek V3 | Kimi K2 |
 | --- | --- | --- |
@@ -355,7 +357,7 @@ prediction. During inference, this prediction can be used for speculative decodi
 ~1.8x TPS speedup in practice.
 
 <span class="term">MLA (DV3 and K2)</span><br>
-Both DV3 and K2 use <span class="term">Multi-head Latent Attention</span>, a novel attention
+Both DV3 and K2 use <span class="term">Multi-Head Latent Attention</span>, a novel attention
 mechanism introduced by DV3. MLA factors attention through a lower-dimensional latent and caches
 this latent during inference, thereby reducing activation memory during training and cutting KV cache footprint during inference. Unlike many efficient attention mechanisms, MLA does not appear to cause accuracy degradations or long context weaknesses. We may examine MLA further in future articles on dynamic sparse attention mechanisms.
 
@@ -375,8 +377,9 @@ I was particularly struck by the extent of model-infra codesign. I've long felt 
 researcher-engineer dichotomy is contrived, and that progress in AI will come from teams that
 deeply understand both abstract ideas and the physical systems that implement them.
 
-I've been interested in sparsity as a theme since I first read about compressed sensing as a college
-freshman in 2014. For many years, sparsity has remained something of an afterthought in ML, largely
-due to the challenges of getting it to work efficiently on hardware originally built for dense
-matrix math. It's great to see sparsity become a mainstay in SOTA deep learning models, and
-I'm excited to see what the future of sparsity research holds.
+I've been interested in sparsity as a theme since I first read about
+[compressed sensing](https://web.stanford.edu/class/cs168/l/l18a.pdf) as a college freshman in 2014.
+For many years, sparsity has remained something of an afterthought in ML, largely due to the
+challenges of getting it to work efficiently on hardware originally built for dense matrix math.
+It's great to see sparsity become a mainstay in SOTA deep learning models, and I'm excited to see
+what the future of sparsity research holds.
