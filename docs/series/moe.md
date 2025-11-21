@@ -46,10 +46,10 @@ a very interesting pure modeling piece (auxiliary-free load balancing in DeepSee
 
 ### 2.3 Notation
 We consider MoE layers with input dimension <span class="term">$D$</span>,
-<span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). In addition, we'll let <span class="term">$k_f$</span> denote the number of
+<span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). We'll let <span class="term">$k_f$</span> denote the number of
 shared/fixed experts ($m$ and $k$ refer only to non-shared), and <span class="term">$T$</span> the
-context length. (See the spec table in Section 5.4 for a full list of symbols we use across the article.) We'll use <span class="term">DV3</span> and <span class="term">K2</span> as shorthand for
-DeepSeek V3 and Kimi K2 respectively. Key terms are highlighted in <span class="term">blue</span>,
+context length. (See the spec table in Section 5.4 for a full list of symbols used across the article.) We'll use <span class="term">DV3</span> and <span class="term">K2</span> as shorthand for
+DeepSeek V3 and Kimi K2. Key terms are highlighted in <span class="term">blue</span>,
 and key ideas in <span class="idea">green</span>; hence a good way to skim this article is to follow
 the colored words.
 
@@ -118,7 +118,8 @@ insufficient to hold the full MoE activations.*"
 <span class="term">Load Imbalance</span><br>
 In addition to *total* memory, load imbalances can tip high-load GPUs over their individual limits, causing OOM crashes.
 
-We'll see in Sections 5-8 how K2 and DV3 address memory and communication challenges via various
+
+We'll see in Sections 5-8 how K2 and DV3 address systems challenges via various
 techniques including dispersion bounding, novel pipeline schedules, replication, caching, reduced
 precision, activation recomputation, CPU offloading, and others.
 
@@ -151,8 +152,8 @@ who discovers a populated lake with 100 fish, becomes disproportionately wealthy
 without any redistributive mechanism (gradients under hard top-k gating creating a "rich get richer"
 phenomenon).
 
-These issues make training MoEs tricky, necessitating careful <span class="term">auxiliary losses/
-regularizers</span> to ensure proper specialization and load balancing, plus monitoring during
+These issues make training MoEs tricky, necessitating careful
+<span class="term">auxiliary losses/regularizers</span> to ensure proper specialization and load balancing, plus monitoring during
 training to detect and revive dead experts. We'll explore these issues in more depth in Part 2,
 where we'll also see how DV3 was able to dispense with (most) auxiliary losses via a novel
 algorithm with interesting geometric and control-theoretic interpretations.
@@ -200,13 +201,14 @@ models to some of their contemporaries whose specs are public.
 | <span class="term">Llama 3.1 405B</span> | 2024 | 1 | 1 | 1.0 | **405B** | **405B** |
 
 K2 and DV3 push sparsity further than their contemporaries, with one notable exception - Google's
-Switch Transformer (Switch-C) is an outlier along every dimension in this table, and was in many
-ways ahead of its time. My sense is that the representational weaknesses of its $k=1$ design tend to
-outweigh the systems simplifications it confers, and most SOTA MoEs use $k \in [2, 8]$. I would not
-be surprised if future models actually <span class="idea">raise</span> $k$, and push $s$ by
+<span class="term">Switch Transformer</span> is an outlier along every dimension in this table, and
+was in many
+ways ahead of its time. My sense is that the representational weaknesses of the $k=1$ design tend to
+outweigh the its systems benefits, leading most SOTA MoEs to use $k \in [2, 8]$. I wouldn't
+be surprised if future models actually <span class="idea">raise $k$</span>, and push $s$ by
 raising $m$ and decreasing expert width $b$, i.e. pursuing finer-grained sparsity rather than just 
-ewer active experts. We'll defer a deeper discussion of the representational implications of this to
-a future article.
+fewer active experts. We'll defer a deeper discussion of the representational implications of this
+to a future article.
 
 ### 5.3 Sparsity Scaling Laws
 The K2 paper develops an empirical <span class="idea">Sparsity Scaling Law</span>, in which they
@@ -228,8 +230,8 @@ The table below summarizes several key aspects of DV3 and K2's architectures.
 
 | Dimension | DeepSeek V3 | Kimi K2 |
 | --- | --- | --- |
-| **$P$ (Total Model Params)** | **[671B]** | **[1.04T]** |
-| **$P_a$ (Active Model Params)** | **[37B]** | **[32.6B]** |
+| **$P$ (Total Model Params)** | **671B** | **1.04T** |
+| **$P_a$ (Active Model Params)** | **37B** | **32.6B** |
 | **Total:Active Param Ratio** | **18.3** | **31.9** |
 | **Pretraining Tokens** | **14.8T** | **15.5T** |
 | **$L$ (Total Layers)** | **61** | **61** |
@@ -258,7 +260,7 @@ parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neur
 As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
 fine-grained sparsity, is to <span class="idea">remove tensor parallelism</span>. The DV3 paper
-explicitly mentions removing tensor parallelism during training, and the K2 paper does not mention
+explicitly mentions removing tensor parallelism during training, and the K2 paper doesn't mention
 using tensor parallelism.
 
 ### 6.2 Pipeline Schedules
@@ -271,9 +273,9 @@ each layer into substages:
 * Forward: attention, dispatch, MLP, combine 
 * Backward: same, but attention and MLP further split into `dInput` and `dWeight`
 
-Each stage maintains two in-flight parameter/gradient copies so a forward channel and a
+Each stage maintains two in-flight parameter/gradient copies so a forward and a
 backward channel can run concurrently without blocking on the same weights. With careful reordering,
-DualPipe overlaps nearly all communication (MoE + pipeline) under compute, as illustrated in the
+DualPipe overlaps nearly all communication (MoE + pipeline) with compute, as illustrated in the
 figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due
 to the replication.
 
@@ -287,11 +289,11 @@ in which each stage alternates one forward and one backward microbatch. Unlike D
 not require an extra copy of parameters.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
-reduce expert-parallel communication in order for it not to dominate during 1F1B. K2 achieves this
-by adopting "the smallest feasible EP parallelization strategy," partitioning experts across just
-16 devices. Note that lower expert parallelism implies more experts
-per GPU, which implicitly smooths load (even if load is imbalanced across experts, it has a higher
-probability of being balanced across GPUs, due to the law of large numbers).
+reduce expert communication in order for it not to dominate during 1F1B. K2 achieves this
+by adopting "*the smallest feasible EP parallelization strategy,*" partitioning experts across just
+16 devices. Note that lower EP implies more experts
+per GPU, which implicitly smooths load (even under *expert* imbalance, there's a higher
+likelihood of *GPU* balance, due to the law of large numbers).
 
 ### 6.3 Inference: Hot Expert Replication (DV3)
 The basic idea of replication is that during inference, we can monitor online statistics of expert
@@ -332,7 +334,7 @@ stored in CPU memory, and <span class="idea">updated asynchronously</span>.
 ### 7.3 Reduced Precision & KV Cache Reduction
 Both DV3 and K2 make extensive use of reduced precision for both activations and optimizer states.
 Reduced precision is a large topic in its own right, and we'll leave a detailed treatment to a
-future article. Both DV3 and K2 use <span class="term">Multi-Head Latent Attention (MLA)</span>,
+future article. Both models use <span class="term">Multi-Head Latent Attention (MLA)</span>,
 which reduces activation memory during training and KV cache footprint during inference, and is 
 briefly discussed in the next section.
 
