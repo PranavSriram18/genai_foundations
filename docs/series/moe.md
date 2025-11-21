@@ -15,7 +15,7 @@ compute and implicitly localizing knowledge. <span class="term">Mixture of Exper
 (MoE)</span> layers are a form of structured sparsity, and are the standard approach used today. 
 
 Despite its intuitive appeal, sparsity raises complex challenges. Sparsity imposes
-discrete structural constraints on systems we train with continuous tools (backprop) on
+*discrete* structural constraints on systems we train with *continuous* tools (backprop) on
 distributed hardware originally built for dense matrix math, raising implications for both modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased communication, memory pressure, fragmentation).
 
 In this article, we'll first frame these core challenges, and then explore how bleeding-edge sparse
@@ -147,16 +147,23 @@ To start, say we have just 2 lakes, with 10 and 4 fish respectively, and 2 fishe
 both fishermen to the lake with 10 fish is globally suboptimal (10 fish caught vs 14), but locally
 optimal for each fisherman (5 fish each vs 4 if they switch), with no incentive (gradient) to
 switch to the uncovered lake. A third fisherman, who starts in a barren lake with no fish (bad
-expert initialization), starves (<span class="idea">zero gradient from hard top-k gating</span>) rather than switching to the untapped second lake. A fourth,
+expert initialization), starves
+(<span class="idea">zero gradient flow from hard top-k gating</span>) rather than switching to
+the untapped second lake. A fourth,
 who discovers a populated lake with 100 fish, becomes disproportionately wealthy (load imbalance),
-without any redistributive mechanism (discrete routing creating a "rich get richer"
-phenomenon).
+<span class="idea">without any redistributive mechanism</span> (discrete routing creating a "rich
+get richer" phenomenon).
 
-These issues make training MoEs tricky, necessitating careful
+Of course, this thought experiment is a significant simplication and not an exact representation of
+the actual dynamics of MoE optimization, but it serves to illustrate the central tension between
+gradient-based optimization and the discrete structure imposed by sparsity. These issues make
+training MoEs tricky, necessitating careful
 <span class="term">auxiliary losses/regularizers</span> to ensure proper specialization and load balancing, plus monitoring during
-training to detect and revive dead experts. We'll explore these issues in more depth in Part 2,
-where we'll also see how DV3 was able to dispense with (most) auxiliary losses via a novel
-algorithm with interesting geometric and control-theoretic interpretations.
+training to detect and revive dead experts.
+
+We'll explore these themes in more depth in Part 2, where we'll also see how DV3 was able to
+dispense with (most) auxiliary losses via a novel algorithm with interesting geometric and
+control-theoretic interpretations.
 
 ---
 
@@ -173,10 +180,10 @@ DV3 introduces two core twists: <span class="term">auxiliary-free load balancing
 term (discussed in Part 2) and <span class="term">dispersion bounding</span>.
 
 <span class="term">Dispersion Bounding (DV3)</span><br>
-Dispersion bounding reduces inter-node communication by explicitly capping how many <span class="idea">nodes</span> a single token may
+Dispersion bounding reduces inter-node communication by <span class="idea">explicitly capping how many nodes</span> a single token may
 touch in an MoE layer. Ordinary MoE routing simply selects the experts with the top $k$ scores. DV3
-constrains this selection so that the selected experts reside in <span class="idea">at most 4
-nodes</span>. Concretely, say we have 8 active experts. Say the top 7 scoring experts live on nodes
+constrains this selection so that the selected experts reside in at most 4
+nodes. Concretely, say we have 8 active experts. Say the top 7 scoring experts live on nodes
 $n_1, n_2, n_3, n_4$, while the 8th expert lives on a fifth node $n_5$. The 8th expert would be
 dropped and replaced by the next-highest scoring expert that lives on one of $n_1, n_2, n_3, n_4$.
 
@@ -206,7 +213,7 @@ was in many
 ways ahead of its time. My sense is that the representational weaknesses of the $k=1$ design tend to
 outweigh the its systems benefits, leading most modern MoEs to use $k \in [2, 8]$. I wouldn't
 be surprised if future models actually <span class="idea">raise $k$</span>, and push $s$ by
-raising $m$ and decreasing expert width $b$, i.e. pursuing finer-grained sparsity rather than just 
+raising $m$ and decreasing expert width $b$, i.e. <span class="idea">pursuing finer-grained sparsity</span> rather than just 
 fewer active experts. We'll defer a deeper discussion of the representational implications of this
 to a future article.
 
@@ -220,7 +227,7 @@ under the compute-optimal sparsity scaling law, achieving the same validation lo
 48 reduces FLOPs by 1.69x, 1.39x, and 1.15x compared to sparsity levels 8, 16, and 32,
 respectively. Though increasing sparsity leads to better performance, this gain comes with increased infrastructure complexity.*"
 
-These empirical findings corroborate our intuition that sparsity <span class="idea">makes sense
+These empirical findings corroborate our intuition that <span class="idea">sparsity makes sense
 computationally</span>, and that the primary bottlenecks come from today's infrastructure. With
 novel hardware and algorithms, might we see models with 1000x or 10000x sparsity in the
 not-so-distant future?
@@ -268,7 +275,7 @@ using tensor parallelism.
 <span class="term">DualPipe (DV3)</span><br>
 DV3 introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
 overlap communication and computation
-<span class="idea">within a paired forward-backward channel</span>. Specifically, DualPipe splits
+within a <span class="idea">paired forward-backward channel</span>. Specifically, DualPipe splits
 each layer into substages:
 
 * Forward: attention, dispatch, MLP, combine 
