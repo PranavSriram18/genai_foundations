@@ -14,9 +14,9 @@ A natural solution to this problem is <span class="idea">sparsity</span>: select
 compute and implicitly localizing knowledge. <span class="term">Mixture of Experts
 (MoE)</span> layers are a form of structured sparsity, and are the standard approach used today. 
 
-Despite its intuitive appeal, sparsity raises complex challenges: the imposition
-of discrete structural constraints on systems we train with continuous tools (backprop) on
-distributed hardware originally built for dense matrix math raises implications for both modeling (<span class="idea">optimization dynamics</span>, <span class="idea">manifold geometry</span>, post-training stability) and systems (increased inter-device <span class="idea">communication</span>, <span class="idea">memory pressure</span>).
+Despite its intuitive appeal, sparsity raises complex challenges. We are imposing
+discrete structural constraints on systems we train with continuous tools (backprop) on
+distributed hardware originally built for dense matrix math, raising implications for both modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased inter-device communication, memory pressure, fragmentation).
 
 In this article, we'll first frame these core challenges, and then explore how bleeding-edge sparse
 models <span class="term">[DeepSeek V3](https://arxiv.org/abs/2412.19437)</span> and
@@ -192,20 +192,21 @@ models to some of their contemporaries whose specs are public.
 | <span class="term">Qwen3-235B</span> | 2025 | 128 | 8 | 16.0 | **235B** | **22B** |
 | <span class="term">GPT-OSS-120B</span> | 2025 | 128 | 4 | 32.0 | **117B** | **5.1B** |
 | <span class="term">DeepSeek V2</span> | 2024 | 160 | 6 | 26.7 | **236B** | **21B** |
-| <span class="term">Switch-C</span> | 2021 | 2048 | 1 | 2048.0 | **1.57T** |  **13B** |
+| <span class="term">Switch-C</span> | 2021 | 2048 | 1 | 2048.0 | **1.57T** | **13B** |
 | <span class="term">OLMoE</span> | 2024 | 64 | 8 | 8.0 | **7.0B** | **1.3B** |
 | <span class="term">DBRX</span> | 2024 | 16 | 4 | 4.0 | **132B** | **36B** |
 | <span class="term">Grok-1</span> | 2024 | 8 | 2 | 4.0 | **314B** | **~86B** |
 | <span class="term">Mixtral 8x22B</span> | 2024 | 8 | 2 | 4.0 | **141B** | **~39B** |
 | <span class="term">Llama 3.1 405B</span> | 2024 | 1 | 1 | 1.0 | **405B** | **405B** |
 
-K2 and DV3 push sparsity further than their contemporaries, with the exception of Google's Switch
-Transformer (Switch-C), which was ahead of its time and an outlier along every dimension in this
-table. My sense is that the representational weaknesses of $k=1$ tend to outweigh the systems
-simplifications it confers, and most SOTA MoEs use $k \in [2, 8]$. I would not be surprised if
-future models actually <span class="idea">raise</span> $k$, and push $s$ by raising $m$ and
-decreasing expert width $b$, i.e. pursuing finer-grained sparsity rather than just fewer active
-experts. We'll defer a deeper discussion of the representational implications of this to a future article.
+K2 and DV3 push sparsity further than their contemporaries, with one notable exception - Google's
+Switch Transformer (Switch-C) is an outlier along every dimension in this table, and was in many
+ways ahead of its time. My sense is that the representational weaknesses of its $k=1$ design tend to
+outweigh the systems simplifications it confers, and most SOTA MoEs use $k \in [2, 8]$. I would not
+be surprised if future models actually <span class="idea">raise</span> $k$, and push $s$ by
+raising $m$ and decreasing expert width $b$, i.e. pursuing finer-grained sparsity rather than just 
+ewer active experts. We'll defer a deeper discussion of the representational implications of this to
+a future article.
 
 ### 5.3 Sparsity Scaling Laws
 The K2 paper develops an empirical <span class="idea">Sparsity Scaling Law</span>, in which they
@@ -289,7 +290,7 @@ Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an incr
 reduce expert-parallel communication in order for it not to dominate during 1F1B. K2 achieves this
 by adopting "the smallest feasible EP parallelization strategy," partitioning experts across just
 16 devices. Note that lower expert parallelism implies more experts
-per GPU, which implicitly smoothes load (even if load is imbalanced across experts, it has a higher
+per GPU, which implicitly smooths load (even if load is imbalanced across experts, it has a higher
 probability of being balanced across GPUs, due to the law of large numbers).
 
 ### 6.3 Inference: Hot Expert Replication (DV3)
@@ -309,11 +310,11 @@ topology, pipeline schedule (DualPipe), and custom kernels are all jointly optim
 
 ## 7. Memory Optimizations
 ### 7.1 Activation Recomputation
-Activation recomputation is a standard idea in pretraining, wherein certain high activation-heavy 
+Activation recomputation is a standard idea in pretraining, wherein certain activation-heavy 
 layers are <span class="idea">recomputed</span> during the backward pass rather than persisting
 their activations, effectively trading some compute overhead for large memory savings. This is
-<span class="idea">particularly valuable for MoEs</span>, because they have a high memory to
-compute ratio by design, and because they are vulnerable to OOMs under load imbalance.
+<span class="idea">particularly valuable for MoEs</span>, because they have a high
+memory-to-compute ratio by design, and because they are vulnerable to OOMs under load imbalance.
 
 K2 uses aggressive activation recomputation, applying it to LayerNorm, SwiGLU, MLA up-projections,
 and MoE down-projections. DV3 applies activation recomputation to RMSNorm and MLA up-projections. 
@@ -325,9 +326,8 @@ transferred to CPU RAM, or computed entirely on CPUs.
 For activations that are not recomputed, K2 offloads them to CPU RAM, using a custom
 <span class="term">streaming copy engine</span> that overlaps with both compute and communication kernels in the 1F1B schedule.
 
-DV3 maintains an exponential moving average (EMA) of model parameters during training to implement
-their auxiliary-free load balancing. These are stored in CPU memory, and <span class="idea">updated
-asynchronously</span>.
+DV3 maintains an exponential moving average (EMA) of model parameters during training. This is
+stored in CPU memory, and <span class="idea">updated asynchronously</span>.
 
 ### 7.3 Reduced Precision & KV Cache Reduction
 Both DV3 and K2 make extensive use of reduced precision for both activations and optimizer states.
@@ -339,7 +339,7 @@ briefly discussed in the next section.
 ---
 
 ## 8. Non-MoE Techniques
-Before we conclude, we briefly highlight a few other significant architectural innovations in K2 and DV3 that, while not directly tied to MoEs, still highly influence overall efficiency.
+Before we conclude, we briefly highlight a few other significant architectural innovations in K2 and DV3 that, while not directly tied to MoEs, still strongly influence overall efficiency.
 
 <span class="term">Multi-Token Prediction (DV3)</span><br>
 DV3 trains the model to predict the next two tokens simultaneously, as opposed to single next token
