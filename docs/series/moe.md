@@ -147,7 +147,7 @@ To start, say we have just 2 lakes, with 10 and 4 fish respectively, and 2 fishe
 both fishermen to the lake with 10 fish is globally suboptimal (10 fish caught vs 14), but locally
 optimal for each fisherman (5 fish each vs 4 if they switch), with no incentive (gradient) to
 switch to the uncovered lake. A third fisherman, who starts in a barren lake with no fish (bad
-expert initialization), starves (zero gradient from hard top-k gating) rather than switching to the untapped second lake. A fourth,
+expert initialization), starves (<span class="idea">zero gradient from hard top-k gating</span>) rather than switching to the untapped second lake. A fourth,
 who discovers a populated lake with 100 fish, becomes disproportionately wealthy (load imbalance),
 without any redistributive mechanism (discrete routing creating a "rich get richer"
 phenomenon).
