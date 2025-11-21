@@ -17,7 +17,7 @@
 /* dark-mode adjustments */
 @media (prefers-color-scheme: dark) {
     .term  { color: #4dd0e1; }   /* lighter cyan */
-    .idea  { color: #7fdf89;  }   /* lighter green */
+    .idea  { color: #a7efae;  }   /* lighter green */
 }
 
 mjx-container[display="true"] {

@@ -14,9 +14,9 @@ A natural solution to this problem is <span class="idea">sparsity</span>: select
 compute and implicitly localizing knowledge. <span class="term">Mixture of Experts
 (MoE)</span> layers are a form of structured sparsity, and are the standard approach used today. 
 
-Despite its intuitive appeal, sparsity raises complex challenges. We are imposing
+Despite its intuitive appeal, sparsity raises complex challenges. Sparsity imposes
 discrete structural constraints on systems we train with continuous tools (backprop) on
-distributed hardware originally built for dense matrix math, raising implications for both modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased inter-device communication, memory pressure, fragmentation).
+distributed hardware originally built for dense matrix math, raising implications for both modeling (optimization dynamics, manifold geometry, post-training stability) and systems (increased communication, memory pressure, fragmentation).
 
 In this article, we'll first frame these core challenges, and then explore how bleeding-edge sparse
 models <span class="term">[DeepSeek V3](https://arxiv.org/abs/2412.19437)</span> and
@@ -58,7 +58,7 @@ the colored words.
 ## 3. Systems Challenges for Sparsity
 ### 3.1 High Level Framing
 A general design goal in modern distributed training is to hide latency by scheduling compute
-to overlap with communication; hence anything that increases communication or makes it less
+to <span class="idea">overlap</span> with communication; hence anything that increases communication or makes it less
 predictable poses a challenge.
 
 Sparsity lets FLOP count scale sublinearly with parameter count, but those parameters still need to
@@ -87,13 +87,13 @@ GPU training clusters are composed of <span class="term">nodes</span>, each of w
 typically containing 8-16 GPUs. Within a node, GPUs communicate via
 <span class="term">NVLink</span> or <span class="term">NVSwitch</span>, whereas communication across
 nodes uses <span class="term">InfiniBand</span> or <span class="term">RoCE</span>. These have very
-different bandwidths: NVLink provides up to ~1.8 TB/s per GPU on Blackwell (bidirectional, per GPU),
-while InfiniBand offers ~100 GB/s per port (XDR 800), typically aggregated over multiple ports per
+different bandwidths: NVLink offers ~1.8 TB/s bidirectional per GPU on Blackwell,
+while InfiniBand (XDR 800) offers ~100 GB/s per port, typically aggregated over 2-8 ports per
 node. The implication for model designers is that communication costs are <span
 class="idea">heterogeneous</span>. This motivates thinking of experts not just in isolation, but
 potentially defining <span class="idea">topology-aware groupings</span> of experts based on physical
-colocation. We'll see in Sections 5.1 and 6.3 how <span class="term">dispersion bounding</span> and
-<span class="term">hot expert replication</span> are concrete instances of this idea.
+colocation. We'll see <span class="term">dispersion bounding</span> (Section 5.1) and
+<span class="term">hot expert replication</span> (Section 6.3) as concrete instances of this idea.
 
 ### 3.4 Memory Pressure
 In MoE layers, gradients don't flow to non-selected experts, so at first glance, it should seem that
@@ -145,11 +145,11 @@ samples). We need to allocate fishermen (experts) to these lakes, under competin
 
 To start, say we have just 2 lakes, with 10 and 4 fish respectively, and 2 fishermen. Allocating
 both fishermen to the lake with 10 fish is globally suboptimal (10 fish caught vs 14), but locally
-optimal for each fisherman (5 fish each vs 4 if they switch), with no incentive (gradient) to switch
-to the uncovered lake. A third fisherman, who starts in a barren lake with no fish (bad expert
-initialization), starves (zero gradient) rather than switching to the untapped second lake. A fourth,
+optimal for each fisherman (5 fish each vs 4 if they switch), with no incentive (gradient) to
+switch to the uncovered lake. A third fisherman, who starts in a barren lake with no fish (bad
+expert initialization), starves (zero gradient from hard top-k gating) rather than switching to the untapped second lake. A fourth,
 who discovers a populated lake with 100 fish, becomes disproportionately wealthy (load imbalance),
-without any redistributive mechanism (gradients under hard top-k gating creating a "rich get richer"
+without any redistributive mechanism (discrete routing creating a "rich get richer"
 phenomenon).
 
 These issues make training MoEs tricky, necessitating careful
@@ -204,7 +204,7 @@ K2 and DV3 push sparsity further than their contemporaries, with one notable exc
 <span class="term">Switch Transformer</span> is an outlier along every dimension in this table, and
 was in many
 ways ahead of its time. My sense is that the representational weaknesses of the $k=1$ design tend to
-outweigh the its systems benefits, leading most SOTA MoEs to use $k \in [2, 8]$. I wouldn't
+outweigh the its systems benefits, leading most modern MoEs to use $k \in [2, 8]$. I wouldn't
 be surprised if future models actually <span class="idea">raise $k$</span>, and push $s$ by
 raising $m$ and decreasing expert width $b$, i.e. pursuing finer-grained sparsity rather than just 
 fewer active experts. We'll defer a deeper discussion of the representational implications of this
@@ -226,7 +226,8 @@ novel hardware and algorithms, might we see models with 1000x or 10000x sparsity
 not-so-distant future?
 
 ### 5.4 Spec Table
-The table below summarizes several key aspects of DV3 and K2's architectures.
+The table below summarizes several key aspects of DV3 and K2's architectures. We'll discuss many
+of these in subsequent sections.
 
 | Dimension | DeepSeek V3 | Kimi K2 |
 | --- | --- | --- |
@@ -276,8 +277,7 @@ each layer into substages:
 Each stage maintains two in-flight parameter/gradient copies so a forward and a
 backward channel can run concurrently without blocking on the same weights. With careful reordering,
 DualPipe overlaps nearly all communication (MoE + pipeline) with compute, as illustrated in the
-figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due
-to the replication.
+figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due to the replication.
 
 ![pipeline_figure](../img/post1/moe_pipeline.png)
 
@@ -334,9 +334,7 @@ stored in CPU memory, and <span class="idea">updated asynchronously</span>.
 ### 7.3 Reduced Precision & KV Cache Reduction
 Both DV3 and K2 make extensive use of reduced precision for both activations and optimizer states.
 Reduced precision is a large topic in its own right, and we'll leave a detailed treatment to a
-future article. Both models use <span class="term">Multi-Head Latent Attention (MLA)</span>,
-which reduces activation memory during training and KV cache footprint during inference, and is 
-briefly discussed in the next section.
+future article. Both models use <span class="term">Multi-Head Latent Attention (MLA)</span>, discussed briefly in the next section.
 
 ---
 
@@ -351,8 +349,7 @@ prediction. During inference, this prediction can be used for speculative decodi
 <span class="term">MLA (DV3 and K2)</span><br>
 Both DV3 and K2 use <span class="term">Multi-head Latent Attention</span>, a novel attention
 mechanism introduced by DV3. MLA factors attention through a lower-dimensional latent and caches
-this latent during inference, cutting KV cache footprint and memory traffic without accuracy
-regressions. We may examine MLA further in future articles on dynamic sparse attention mechanisms.
+this latent during inference, thereby reducing activation memory during training and cutting KV cache footprint during inference. Unlike many efficient attention mechanisms, MLA does not appear to cause accuracy degradations or long context weaknesses. We may examine MLA further in future articles on dynamic sparse attention mechanisms.
 
 <span class="term">MuonClip (K2)</span><br>
 K2’s training stability hinges on <span class="term">MuonClip</span>, which augments the
@@ -366,9 +363,9 @@ fine-grained sparsity. As I dove into the DV3 and K2 papers, the level of detail
 was quite striking - several pages later, it still feels like I've barely scratched the surface! I
 even had to defer some topics originally intended for this piece to a separate Part 2.
 
-I was particularly struck by the extent of model-infrastructure codesign. I've long felt the
-researcher-engineer dichotomy is contrived, and that progress in AI will come from teams that deeply
-understand both abstract ideas and the physical systems that implement them.
+I was particularly struck by the extent of model-infra codesign. I've long felt the
+researcher-engineer dichotomy is contrived, and that progress in AI will come from teams that
+deeply understand both abstract ideas and the physical systems that implement them.
 
 I've been interested in sparsity as a theme since I first read about compressed sensing as a
 freshman in 2014. For many years, sparsity has remained something of an afterthought in ML, largely
