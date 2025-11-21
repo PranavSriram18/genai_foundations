@@ -4,6 +4,7 @@ This site hosts my long-form technical essays on Transformers, efficient attenti
 topics.
 
 Start here:
+
 - **[Understanding Transformers](series/transformer_internals.md)**
 -
-- **[The Sparsity Frontier (MoE)](series/moe.md)**
+- **[The Sparsity Frontier](series/moe.md)**
