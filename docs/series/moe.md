@@ -285,7 +285,7 @@ each layer into substages:
 Each stage maintains two in-flight parameter/gradient copies so a forward and a
 backward channel can run concurrently without blocking on the same weights. With careful reordering,
 DualPipe overlaps nearly all communication (MoE + pipeline) with compute, as illustrated in the
-figure below from the DV3 paper. Note that this comes at the cost of increased memory footprint due to the replication.
+figure below from the DV3 paper. (This comes at the cost of increased memory footprint due to replication.)
 
 ![pipeline_figure](../img/post1/moe_pipeline.png)
 
