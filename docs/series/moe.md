@@ -313,7 +313,7 @@ compute, as illustrated in the figure below from the DV3 paper. (This comes at t
 
 ### 6.4 Interleaved 1F1B (K2)
 K2's authors cite DualPipe’s extra parameter and gradient memory footprint as prohibitive for
-scaling to a trillion parameters, and stick to
+scaling to a trillion parameters and stick to
 [interleaved 1F1B](https://colossalai.org/docs/features/pipeline_parallel/), an existing method
 in which each stage alternates one forward and one backward microbatch. Unlike DualPipe, 1F1B does
 not require an extra copy of parameters. On the flip side, Interleaved 1F1B requires increased
