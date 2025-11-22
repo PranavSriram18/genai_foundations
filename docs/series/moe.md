@@ -139,7 +139,7 @@ of the input data manifold. A few potential failure modes include:
 * "Dead experts" (some experts never getting selected by the router)
 * Load imbalance (some experts activating far more frequently than others)
 
-Below we describe a thought experiment for thinking about how these problems can arise under vanilla
+Below we describe a thought experiment illustrating how these problems can arise under vanilla
 top-k routing (without interventions like load balancing regularizers, capacity limits, etc.), and
 hence motivate those interventions. 
 
@@ -210,7 +210,7 @@ models to some of their contemporaries whose specs are public.
 | <span class="term">Mixtral 8x22B</span> | 2024 | 8 | 2 | 4.0 | **141B** | **~39B** |
 | <span class="term">Llama 3.1 405B</span> | 2024 | 1 | 1 | 1.0 | **405B** | **405B** |
 
-K2 and DV3 push sparsity further than their contemporaries, with one notable exception - Google's
+K2 and DV3 push sparsity further than their contemporaries, with one notable exception: Google's
 <span class="term">Switch Transformer</span> is an outlier along every dimension in this table, and
 was in many
 ways ahead of its time. My sense is that the representational weaknesses of the $k=1$ design tend to
@@ -269,8 +269,8 @@ Both models compose <span class="term">pipeline parallelism</span>, <span class=
 parallelism</span>, and [ZeRO-1 data parallelism](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html).
 
 Recall that the central idea of pipeline parallelism is to split computation into stages, and run
-these stages in an assembly-line fashion. The main challenge is to <span class="idea">hide communication latency</span> - both pipeline communication between stages, and communication
-induced by other parallelism strategies being used - by <span class="idea">overlapping communication with compute</span>.
+these stages in an assembly-line fashion. The main challenge is to <span class="idea">hide communication latency</span> (both pipeline communication between stages, and communication
+induced by other parallelism strategies being used) by <span class="idea">overlapping communication with compute</span>.
 
 As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
@@ -289,7 +289,8 @@ In parallel computing terms, the computation of $dX$ is a
 <span class="term">synchronization point</span>,
 while that of $dW$ is not. This motivates splitting the backward computation for a layer into two
 separately scheduled pieces: first compute $dX$ and launch the pipeline send to the previous stage, then compute $dW$ locally while that communication is in flight. There doesn't seem to be a
-standard name for this technique in the literature, so we'll simply call it "Backward Splitting."
+standard name for this technique in the literature, so we'll simply call it
+<span class="term">Backward Splitting</span>.
 
 ### 6.3 DualPipe (DV3)
 DV3 introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
@@ -321,7 +322,7 @@ reduce expert communication in order for it not to dominate during 1F1B. K2 achi
 by adopting "<span class="idea">the smallest feasible expert parallelization strategy</span>,"
 partitioning experts across just $d=16$ devices. Note that lower $d$ implies more experts
 per GPU, which implicitly smooths load (even under *expert* imbalance, there's a higher
-likelihood of *GPU* balance, due to the law of large numbers). The figure below (from the K2 paper)
+likelihood of *GPU* balance, due to the law of large numbers). The figure below from the K2 paper
 illustrates their 1F1B schedule.
 
 ![kimi_pipeline](../img/post1/kimi_pipeline.png)
@@ -347,7 +348,7 @@ Activation recomputation is a standard idea in pretraining, wherein certain acti
 layers are <span class="idea">recomputed</span> during the backward pass rather than persisting
 their activations, effectively trading some compute overhead for large memory savings. This is
 <span class="idea">particularly valuable for MoEs</span>, because they have a high
-memory-to-compute ratio by design, and because they are vulnerable to OOMs under load imbalance.
+memory-to-compute ratio by design and are vulnerable to OOMs under load imbalance.
 
 K2 uses aggressive activation recomputation, applying it to LayerNorm, SwiGLU, MLA up-projections,
 and MoE down-projections. DV3 applies activation recomputation to RMSNorm and MLA up-projections. 
@@ -390,7 +391,7 @@ tokens of pretraining without loss spikes.
 ## 9. Reflections
 I started this article intending to write a short note on a few key ideas related to scaling
 fine-grained sparsity. As I dove into the DV3 and K2 papers, the level of detail and innovation
-was quite striking - several pages later, it still feels like I've barely scratched the surface! I
+was quite striking; several pages later, it still feels like I've barely scratched the surface! I
 even had to defer some topics originally intended for this piece to a separate Part 2.
 
 I was particularly struck by the extent of model-infra codesign. I've long felt the
