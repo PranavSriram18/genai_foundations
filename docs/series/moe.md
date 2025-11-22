@@ -37,15 +37,16 @@ and how [distributed training](https://colossalai.org/docs/concepts/paradigms_of
 ### 2.2 Scope & Roadmap
 Kimi K2 and DeepSeek V3 introduce a number of innovations across data, pretraining, and 
 post-training. We'll primarily focus on pretraining aspects directly connected to
-MoEs and sparsity. In particular, we'll discuss:
+MoEs and sparsity. In particular, we'll:
 
-* Challenges with training large sparse models, and frames for reasoning about them (Sections 3 and 4)
-* Core elements of Kimi K2 and DeepSeek V3's sparsity architectures (Section 5)
-* Several innovations in K2 and DV3 that address specific sparsity challenges (Sections 6-8)
-* Some personal reflections (Section 9)
+* Frame the core challenges with training large sparse models, and develop mental models for
+reasoning about them (Sections 3 and 4)
+* Examine the core elements of Kimi K2 and DeepSeek V3's sparsity architectures (Section 5)
+* Break down several innovations in K2 and DV3 that address specific sparsity challenges
+(Sections 6-8)
+* Close with some personal reflections (Section 9)
 
-This article will mostly focus on systems innovations and systems-modeling codesign. We'll cover
-a very interesting pure modeling piece (auxiliary-free load balancing in DeepSeek V3) in Part 2.
+We'll also pick back up on some threads in Part 2.
 
 ### 2.3 Notation
 We consider MoE layers with input dimension <span class="term">$D$</span>,
@@ -267,51 +268,72 @@ discussed in subsequent sections.
 Both models compose <span class="term">pipeline parallelism</span>, <span class="term">expert
 parallelism</span>, and [ZeRO-1 data parallelism](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html).
 
+Recall that the central idea of pipeline parallelism is to split computation into stages, and run
+these stages in an assembly-line fashion. The main challenge is to <span class="idea">hide communication latency</span> - both pipeline communication between stages, and communication
+induced by other parallelism strategies being used - by <span class="idea">overlapping communication with compute</span>.
+
 As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
 fine-grained sparsity, is to <span class="idea">remove tensor parallelism</span>. The DV3 paper
 explicitly mentions removing tensor parallelism during training, and the K2 paper doesn't mention
 using tensor parallelism.
 
-### 6.2 Pipeline Schedules
-<span class="term">DualPipe (DV3)</span><br>
+### 6.2 Synchronization Points and Backward Splitting
+Before looking at DV3's and K2's pipeline strategies, let's review a neat idea introduced in the
+[Zero Bubble](https://arxiv.org/abs/2401.10241) paper. During backprop, a particular layer must
+compute gradients with respect to weights ($dW$) and with respect to inputs ($dX$). In Deep
+Learning 101, we typically treat these as a single paired operation ("layer backward"), but there's
+actually an exploitable asymmetry here:
+<span class="idea">the backward pass for preceding layers depends only on $dX$, not on $dW$</span>.
+In parallel computing terms, the computation of $dX$ is a
+<span class="term">synchronization point</span>,
+while that of $dW$ is not. This motivates splitting the backward computation for a layer into two
+separately scheduled pieces: first compute $dX$ and launch the pipeline send to the previous stage, then compute $dW$ locally while that communication is in flight. There doesn't seem to be a
+standard name for this technique in the literature, so we'll simply call it "Backward Splitting."
+
+### 6.3 DualPipe (DV3)
 DV3 introduces a novel pipeline schedule called DualPipe, whose core idea is to carefully
 overlap communication and computation
 within a <span class="idea">paired forward-backward channel</span>. Specifically, DualPipe splits
 each layer into substages:
 
-* Forward: attention, dispatch, MLP, combine 
-* Backward: same, but attention and MLP further split into `dInput` and `dWeight`
+* Forward: Attention, Dispatch, MLP, Combine 
+* Backward: same, but with Backward Splitting on Attention and MLP
 
 Each stage maintains two in-flight parameter/gradient copies so a forward and a
-backward channel can run concurrently without blocking on the same weights. With careful reordering,
-DualPipe overlaps nearly all communication (MoE + pipeline) with compute, as illustrated in the
-figure below from the DV3 paper. (This comes at the cost of increased memory footprint due to replication.)
+backward channel can run concurrently <span class="idea">without blocking</span> on the same
+weights. With careful reordering, DualPipe overlaps nearly all communication (MoE + pipeline) with
+compute, as illustrated in the figure below from the DV3 paper. (This comes at the cost of increased memory footprint due to replication.)
 
 ![pipeline_figure](../img/post1/moe_pipeline.png)
 
-<span class="term">Interleaved 1F1B (K2)</span><br>
+### 6.4 Interleaved 1F1B (K2)
 K2's authors cite DualPipe’s extra parameter and gradient memory footprint as prohibitive for
 scaling to a trillion parameters, and stick to
 [interleaved 1F1B](https://colossalai.org/docs/features/pipeline_parallel/), an existing method
 in which each stage alternates one forward and one backward microbatch. Unlike DualPipe, 1F1B does
-not require an extra copy of parameters.
+not require an extra copy of parameters. On the flip side, Interleaved 1F1B requires increased
+pipeline communication due to splitting the model into more pipeline stages. K2 mitigates this with
+Backward Splitting.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
 reduce expert communication in order for it not to dominate during 1F1B. K2 achieves this
 by adopting "<span class="idea">the smallest feasible expert parallelization strategy</span>,"
 partitioning experts across just $d=16$ devices. Note that lower $d$ implies more experts
 per GPU, which implicitly smooths load (even under *expert* imbalance, there's a higher
-likelihood of *GPU* balance, due to the law of large numbers).
+likelihood of *GPU* balance, due to the law of large numbers). The figure below (from the K2 paper)
+illustrates their 1F1B schedule.
 
-### 6.3 Inference: Hot Expert Replication (DV3)
+![kimi_pipeline](../img/post1/kimi_pipeline.png)
+
+### 6.5 Inference: Hot Expert Replication (DV3)
 The basic idea of replication is that during inference, we can monitor online statistics of expert
 loads, and <span class="idea">redundantly deploy</span> high-load experts in a manner that balances
 load across GPUs without increasing inter-node communication. DV3 applies this strategy to the
 prefilling stage of inference specifically. It uses 32 redundant experts (out of $m=256$ total),
 with each GPU hosting its 8 original experts plus 1 redundant expert.
 
-### 6.4 Custom Kernels
+### 6.6 Custom Kernels
 DV3 develops custom kernels using [PTX](https://developer.nvidia.com/blog/understanding-ptx-the-assembly-language-of-cuda-gpu-computing/) for efficient all-to-all communication. While
 specifics of this kernel are beyond the scope of this article, what stands out is the
 <span class="idea">extent of codesign</span>: the routing mechanism (dispersion bounding), cluster
