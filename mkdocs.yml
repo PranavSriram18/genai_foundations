@@ -48,4 +48,4 @@ nav:
   - Home: index.md
   - Series:
     - Transformer Internals: series/transformer_internals.md
-    - Mixture of Experts: series/moe.md
+    - The Sparsity Frontier: series/moe.md

@@ -5,6 +5,5 @@ topics.
 
 Start here:
 
-- **[Understanding Transformers](series/transformer_internals.md)**
--
-- **[The Sparsity Frontier](series/moe.md)**
+* **[Understanding Transformers](series/transformer_internals.md)**
+* **[The Sparsity Frontier](series/moe.md)**
