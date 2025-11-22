@@ -96,7 +96,7 @@ node. The implication for model designers is that <span
 class="idea">communication costs are heterogeneous</span>. This motivates thinking of experts not just in isolation, but
 potentially as part of <span class="idea">topology-aware groupings</span> based on physical
 colocation. We'll see <span class="term">dispersion bounding</span> (Section 5.1) and
-<span class="term">hot expert replication</span> (Section 6.3) as concrete instances of this idea.
+<span class="term">hot expert replication</span> (Section 6.5) as concrete instances of this idea.
 
 ### 3.4 Memory Pressure
 In MoE layers, gradients don't flow to non-selected experts. Hence at first glance, it should seem
