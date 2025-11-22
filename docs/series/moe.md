@@ -2,11 +2,13 @@
 # The Sparsity Frontier: Advances in Kimi K2 and DeepSeek V3
 
 ## 1. Introduction
-A core design limitation of standard <span class="term">dense LLMs</span> is the tight coupling between parameter count ("knowledge") and per-token FLOP count (the amount of "work" required to
-generate a token), due to knowledge being *diffuse* across parameters rather than *localized* to
-subsets of them. When we ask "what is the capital of Kenya?", we effectively pay for the LLM's
-proficiency in literature, medieval history, and quantum mechanics, despite the bounded scope
-of our question.
+When we ask an LLM "what is the capital of Kenya?", we effectively pay for its proficiency
+in literature, medieval history, and quantum mechanics, despite the bounded scope of our question.
+In standard <span class="term">dense</span> models, every parameter is active in the generation
+of each token, creating a tight coupling between parameter count ("knowledge") and FLOP count (the amount of "work" required to generate a token). Knowledge is *diffuse* across the model's
+parameters rather than *localized* to subsets of them. One implication of this is that naively
+scaling models would increase the already massive computational, energy, and capital costs of
+inference. 
 
 A natural solution to this problem is <span class="idea">sparsity</span>: selectively activate a
 <span class="idea">bounded subset</span> of parameters for each token, thereby decoupling memory and
@@ -258,7 +260,8 @@ discussed in subsequent sections.
 | **Dispersion Control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit; implicit via low $d$** |
 | **Attention Mechanism** | **MLA** | **MLA** |
 | **Attention Heads**  | **128** | **64** |
-| **Parallelism Strategy** | **DualPipe** | **Interleaved 1F1B** |
+| **Forms of Parallelism** | **Pipeline, Tensor, ZeRO-1 Data** | **Pipeline, Tensor, ZeRO-1 Data** |
+| **Pipeline Schedule** | **DualPipe** | **Interleaved 1F1B** |
 | **Memory Optimizations** | **Recompute**, **Reduced Precision**, **CPU Offload** | **Recompute**, **Reduced Precision**, **CPU Offload** |
 
 ---
