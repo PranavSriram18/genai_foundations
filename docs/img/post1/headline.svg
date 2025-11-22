@@ -58,25 +58,25 @@
   
   <circle cx="850" cy="120" r="20" fill="#ffffff" stroke="#666" stroke-width="2"/>
   
-  <!-- CPU Infrastructure (top right) - Slightly darker pink -->
+  <!-- CPU Infrastructure (top right) - Aligned to output tokens -->
   <!-- CPU RAM box -->
-  <rect x="1050" y="90" width="180" height="90" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="3" rx="6"/>
-  <text x="1140" y="115" fill="#000" font-size="18" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">CPU RAM</text>
-  <text x="1140" y="140" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Activation Cache</text>
-  <text x="1140" y="160" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">EMA Tracking</text>
+  <rect x="1050" y="100" width="180" height="90" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="3" rx="6"/>
+  <text x="1140" y="125" fill="#000" font-size="18" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">CPU RAM</text>
+  <text x="1140" y="150" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Activation Cache</text>
+  <text x="1140" y="170" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">EMA Tracking</text>
   
   <!-- Streaming Copy Engine -->
-  <rect x="1050" y="230" width="180" height="50" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="3" rx="6"/>
-  <text x="1140" y="260" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Streaming Copy Engine</text>
+  <rect x="1050" y="240" width="180" height="50" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="3" rx="6"/>
+  <text x="1140" y="270" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Streaming Copy Engine</text>
   
   <!-- Arrow from Streaming Copy Engine to CPU RAM -->
-  <line x1="1140" y1="190" x2="1140" y2="225" stroke="#FFD0E0" stroke-width="2" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
+  <line x1="1140" y1="200" x2="1140" y2="235" stroke="#FFD0E0" stroke-width="2" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
   
   <!-- Shared Expert (Left) - CYAN/TURQUOISE -->
   <rect x="80" y="420" width="70" height="250" fill="#00CED1" stroke="#00A8B5" stroke-width="3" rx="4"/>
-  <text x="115" y="540" fill="#000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Shared</text>
-  <text x="115" y="555" fill="#000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert</text>
-  <text x="115" y="570" fill="#000" font-size="10" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Primary)</text>
+  <text x="115" y="538" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Shared</text>
+  <text x="115" y="556" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert</text>
+  <text x="115" y="575" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Primary)</text>
   
   <!-- Node labels -->
   <text x="280" y="335" fill="#9370db" font-size="16" font-family="Arial, sans-serif" font-weight="600" text-anchor="middle">Node 1</text>
@@ -104,21 +104,21 @@
   <rect x="840" y="390" width="200" height="320" fill="none" stroke="#7b68ee" stroke-width="2" stroke-dasharray="8,4" rx="8"/>
   
   <!-- Bidirectional arrows from Nodes to Streaming Copy Engine -->
-  <line x1="380" y1="360" x2="1050" y2="255" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
-  <line x1="600" y1="360" x2="1050" y2="255" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
-  <line x1="790" y1="360" x2="1050" y2="255" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
-  <line x1="1000" y1="360" x2="1050" y2="255" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
+  <line x1="380" y1="360" x2="1050" y2="265" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
+  <line x1="600" y1="360" x2="1050" y2="265" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
+  <line x1="790" y1="360" x2="1050" y2="265" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
+  <line x1="1000" y1="360" x2="1050" y2="265" stroke="#FFD0E0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowPink2BidiEnd)" marker-start="url(#arrowPink2BidiStart)"/>
   
   <!-- Shared Expert Replica (Right) - CYAN -->
   <rect x="1070" y="420" width="70" height="250" fill="#00CED1" stroke="#00A8B5" stroke-width="3" rx="4"/>
-  <text x="1105" y="540" fill="#000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Shared</text>
-  <text x="1105" y="555" fill="#000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert</text>
-  <text x="1105" y="570" fill="#000" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Replica)</text>
+  <text x="1105" y="538" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Shared</text>
+  <text x="1105" y="556" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert</text>
+  <text x="1105" y="575" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Replica)</text>
   
   <!-- Router box - Slightly darker pink -->
   <rect x="1180" y="420" width="70" height="250" fill="#FF99CC" stroke="#FF80B3" stroke-width="3" rx="4"/>
-  <text x="1215" y="540" fill="#000" font-size="13" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Router</text>
-  <text x="1215" y="560" fill="#000" font-size="10" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(top-k gating)</text>
+  <text x="1215" y="538" fill="#000" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Router</text>
+  <text x="1215" y="560" fill="#000" font-size="12" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(top-k gating)</text>
   
   <!-- Expert blocks -->
   <!-- Node 1: experts 0-3 -->
@@ -220,7 +220,7 @@
   <line x1="450" y1="900" x2="315" y2="680" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrowBlue)"/>
   <line x1="450" y1="900" x2="705" y2="680" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrowBlue)"/>
   <line x1="450" y1="900" x2="115" y2="680" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrowBlue)"/>
-  <text x="460" y="785" fill="#4a9eff" font-size="10" font-family="Arial, sans-serif" font-style="italic">Low Rank Read</text>
+  <text x="460" y="785" fill="#4a9eff" font-size="11" font-family="Arial, sans-serif" font-style="italic">Low Rank Read</text>
   
   <!-- Token 3 → Expert 5, Expert 10, Shared (right) -->
   <line x1="650" y1="900" x2="485" y2="680" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrowBlue)"/>
@@ -238,8 +238,8 @@
   <!-- FORWARD PASS: Experts to output tokens -->
   <!-- Expert 1 → Token 1 -->
   <line x1="265" y1="410" x2="250" y2="150" stroke="#2ecc71" stroke-width="2" marker-end="url(#arrowGreen)"/>
-  <text x="460" y="270" fill="#2ecc71" font-size="10" font-family="Arial, sans-serif" font-style="italic">Low Rank</text>
-  <text x="450" y="285" fill="#2ecc71" font-size="10" font-family="Arial, sans-serif" font-style="italic">Residual Write</text>
+  <text x="460" y="265" fill="#2ecc71" font-size="11" font-family="Arial, sans-serif" font-style="italic">Low Rank</text>
+  <text x="450" y="280" fill="#2ecc71" font-size="11" font-family="Arial, sans-serif" font-style="italic">Residual Write</text>
   
   <!-- Expert 2 → Token 2 -->
   <line x1="315" y1="410" x2="450" y2="150" stroke="#2ecc71" stroke-width="2" marker-end="url(#arrowGreen)"/>
@@ -290,60 +290,60 @@
   <!-- Pipeline annotation on backward - moved LEFT -->
   <text x="40" y="760" fill="#ff8c42" font-size="10" font-family="Arial, sans-serif" font-style="italic">Backward Microbatch</text>
   
-  <!-- Annotations on the right side -->
-  <!-- All-to-all dispatch label -->
-  <rect x="1380" y="750" width="200" height="60" fill="#1a1a1a" stroke="#4a9eff" stroke-width="2" rx="6"/>
-  <text x="1480" y="772" fill="#4a9eff" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">All-to-All Dispatch</text>
-  <text x="1480" y="792" fill="#4a9eff" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(tokens → experts)</text>
+  <!-- Annotations on the right side - ALIGNED -->
+  <!-- CPU offloading label - Aligned to top of output tokens -->
+  <rect x="1380" y="100" width="200" height="60" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="2" rx="6"/>
+  <text x="1480" y="122" fill="#000" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">CPU Offloading</text>
+  <text x="1480" y="142" fill="#000" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(via streaming engine)</text>
   
   <!-- All-to-all combine label -->
-  <rect x="1380" y="320" width="200" height="60" fill="#1a1a1a" stroke="#2ecc71" stroke-width="2" rx="6"/>
-  <text x="1480" y="342" fill="#2ecc71" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">All-to-All Combine</text>
-  <text x="1480" y="362" fill="#2ecc71" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(experts → tokens)</text>
+  <rect x="1380" y="190" width="200" height="60" fill="#1a1a1a" stroke="#2ecc71" stroke-width="2" rx="6"/>
+  <text x="1480" y="212" fill="#2ecc71" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">All-to-All Combine</text>
+  <text x="1480" y="232" fill="#2ecc71" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(experts → tokens)</text>
+  
+  <!-- Ephemeral State box -->
+  <rect x="1380" y="280" width="200" height="50" fill="url(#diagonalStripes)" stroke="#888" stroke-width="2" rx="6"/>
+  <text x="1480" y="302" fill="#fff" font-size="14" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">ES = Ephemeral State</text>
+  <text x="1480" y="320" fill="#888" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Offloaded/Recomputed</text>
+  
+  <!-- Persistent State box -->
+  <rect x="1380" y="340" width="200" height="50" fill="#1a1a1a" stroke="#888" stroke-width="2" rx="6"/>
+  <text x="1480" y="362" fill="#888" font-size="14" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">PS = Persistent State</text>
+  <text x="1480" y="380" fill="#888" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Params + Optimizer</text>
   
   <!-- Sparse Gradient Flow label -->
-  <rect x="1380" y="520" width="200" height="70" fill="#1a1a1a" stroke="#ff8c42" stroke-width="2" rx="6"/>
-  <text x="1480" y="547" fill="#ff8c42" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Sparse Gradient Flow</text>
-  <text x="1480" y="572" fill="#ff8c42" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Token 1)</text>
+  <rect x="1380" y="410" width="200" height="70" fill="#1a1a1a" stroke="#ff8c42" stroke-width="2" rx="6"/>
+  <text x="1480" y="437" fill="#ff8c42" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Sparse Gradient Flow</text>
+  <text x="1480" y="462" fill="#ff8c42" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(Token 1)</text>
   
-  <!-- CPU offloading label - Slightly darker pink background -->
-  <rect x="1380" y="170" width="200" height="60" fill="#FFD0E0" stroke="#FFB3D9" stroke-width="2" rx="6"/>
-  <text x="1480" y="192" fill="#000" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">CPU Offloading</text>
-  <text x="1480" y="212" fill="#000" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(via streaming engine)</text>
+  <!-- Backward Pass Details box -->
+  <rect x="1380" y="490" width="200" height="70" fill="#333333" stroke="#ff8c42" stroke-width="2" rx="6"/>
+  <text x="1480" y="512" fill="#ff8c42" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Backward Pass</text>
+  <text x="1480" y="532" fill="#ddd" font-size="11" font-family="Arial, sans-serif" text-anchor="middle">ActRecompute</text>
+  <text x="1480" y="552" fill="#ddd" font-size="11" font-family="Arial, sans-serif" text-anchor="middle">dWeight, dInput</text>
   
-  <!-- NEW: Ephemeral State box -->
-  <rect x="1380" y="400" width="200" height="50" fill="url(#diagonalStripes)" stroke="#888" stroke-width="2" rx="6"/>
-  <text x="1480" y="422" fill="#fff" font-size="14" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">ES = Ephemeral State</text>
-  <text x="1480" y="440" fill="#888" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Offloaded/Recomputed</text>
-  
-  <!-- NEW: Persistent State box -->
-  <rect x="1380" y="460" width="200" height="50" fill="#1a1a1a" stroke="#888" stroke-width="2" rx="6"/>
-  <text x="1480" y="482" fill="#888" font-size="14" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">PS = Persistent State</text>
-  <text x="1480" y="500" fill="#888" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">Params + Optimizer</text>
-  
-  <!-- NEW: Backward Pass Details box -->
-  <rect x="1380" y="600" width="200" height="70" fill="#333333" stroke="#ff8c42" stroke-width="2" rx="6"/>
-  <text x="1480" y="622" fill="#ff8c42" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Backward Pass</text>
-  <text x="1480" y="642" fill="#ddd" font-size="11" font-family="Arial, sans-serif" text-anchor="middle">ActRecompute</text>
-  <text x="1480" y="662" fill="#ddd" font-size="11" font-family="Arial, sans-serif" text-anchor="middle">dWeight, dInput</text>
+  <!-- All-to-all dispatch label -->
+  <rect x="1380" y="610" width="200" height="60" fill="#1a1a1a" stroke="#4a9eff" stroke-width="2" rx="6"/>
+  <text x="1480" y="632" fill="#4a9eff" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">All-to-All Dispatch</text>
+  <text x="1480" y="652" fill="#4a9eff" font-size="11" font-family="Arial, sans-serif" font-style="italic" text-anchor="middle">(tokens → experts)</text>
   
   <!-- Sparsity info -->
-  <rect x="1380" y="830" width="200" height="95" fill="#1a1a1a" stroke="#ffd700" stroke-width="2" rx="6"/>
-  <text x="1480" y="855" fill="#ffd700" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert Sparsity</text>
-  <text x="1480" y="880" fill="#ddd" font-size="14" font-family="Arial, sans-serif" text-anchor="middle">routed = 8 (2 depicted)</text>
-  <text x="1480" y="900" fill="#ddd" font-size="14" font-family="Arial, sans-serif" text-anchor="middle">total = 384 (8 depicted)</text>
-  <text x="1480" y="920" fill="#ffd700" font-size="18" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">sparsity = 48x</text>
+  <rect x="1380" y="720" width="200" height="95" fill="#1a1a1a" stroke="#ffd700" stroke-width="2" rx="6"/>
+  <text x="1480" y="745" fill="#ffd700" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert Sparsity</text>
+  <text x="1480" y="770" fill="#ddd" font-size="14" font-family="Arial, sans-serif" text-anchor="middle">routed = 8 (2 depicted)</text>
+  <text x="1480" y="790" fill="#ddd" font-size="14" font-family="Arial, sans-serif" text-anchor="middle">total = 384 (8 depicted)</text>
+  <text x="1480" y="810" fill="#ffd700" font-size="16" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">sparsity = 48x</text>
   
-  <!-- Legend -->
-  <rect x="1380" y="940" width="200" height="105" fill="#1a1a1a" stroke="#888" stroke-width="2" rx="6"/>
-  <text x="1480" y="965" fill="#ddd" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert Status</text>
+  <!-- Legend - Aligned to bottom of input tokens -->
+  <rect x="1380" y="835" width="200" height="105" fill="#1a1a1a" stroke="#888" stroke-width="2" rx="6"/>
+  <text x="1480" y="860" fill="#ddd" font-size="15" font-family="Arial, sans-serif" font-weight="700" text-anchor="middle">Expert Status</text>
   
-  <rect x="1395" y="975" width="25" height="25" fill="#B4E7CE" stroke="#8FD4B8" stroke-width="2" rx="2"/>
-  <text x="1430" y="992" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Active</text>
+  <rect x="1395" y="870" width="25" height="25" fill="#B4E7CE" stroke="#8FD4B8" stroke-width="2" rx="2"/>
+  <text x="1430" y="887" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Active</text>
   
-  <rect x="1395" y="1005" width="25" height="25" fill="#ff6b6b" stroke="#cc4444" stroke-width="2" rx="2"/>
-  <text x="1430" y="1022" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Busy</text>
+  <rect x="1395" y="900" width="25" height="25" fill="#ff6b6b" stroke="#cc4444" stroke-width="2" rx="2"/>
+  <text x="1430" y="917" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Busy</text>
   
-  <rect x="1495" y="975" width="25" height="25" fill="#2a2a2a" stroke="#444" stroke-width="2" rx="2"/>
-  <text x="1530" y="992" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Inactive</text>
+  <rect x="1495" y="870" width="25" height="25" fill="#2a2a2a" stroke="#444" stroke-width="2" rx="2"/>
+  <text x="1530" y="887" fill="#ddd" font-size="12" font-family="Arial, sans-serif">Inactive</text>
 </svg>

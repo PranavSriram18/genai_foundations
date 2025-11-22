@@ -1,6 +1,5 @@
 
 # The Sparsity Frontier: Advances in Kimi K2 and DeepSeek V3
-(NOTE: UNDER CONSTRUCTION)
 
 ## 1. Introduction
 A core design limitation of standard <span class="term">dense LLMs</span> is the tight coupling between parameter count ("knowledge") and per-token FLOP count (the amount of "work" required to
@@ -51,8 +50,8 @@ a very interesting pure modeling piece (auxiliary-free load balancing in DeepSee
 ### 2.3 Notation
 We consider MoE layers with input dimension <span class="term">$D$</span>,
 <span class="term">$m$</span> total experts, and <span class="term">$k$</span> selected experts (per token, per layer). Let <span class="term">$k_f$</span> denote the number of
-shared/fixed experts ($m$ and $k$ refer only to non-shared), and <span class="term">$T$</span> the
-context length. (See the spec table in Section 5.4 for a full list of symbols used across the article.) We'll use <span class="term">DV3</span> and <span class="term">K2</span> as shorthand for
+shared/fixed experts ($m$ and $k$ refer only to non-shared), <span class="term">$T$</span> the
+context length, and <span class="term">$d$</span> the number of devices for expert parallelism. (See the spec table in Section 5.4 for a full list of symbols used across the article.) We'll use <span class="term">DV3</span> and <span class="term">K2</span> as shorthand for
 DeepSeek V3 and Kimi K2. Key terms are highlighted in <span class="term">blue</span>,
 and key ideas in <span class="idea">green</span>; hence a good way to skim this article is to follow
 the colored words.
@@ -60,7 +59,7 @@ the colored words.
 ---
 
 ## 3. Systems Challenges for Sparsity
-### 3.1 High Level Framing
+### 3.1 High-Level Framing
 A general design goal in modern distributed training is to hide latency by scheduling compute
 to <span class="idea">overlap</span> with communication; hence anything that increases communication or makes it less
 predictable poses a challenge.
@@ -113,8 +112,8 @@ Padding in send/recv buffers becomes significant under imbalanced loads and smal
 batches, especially early in training; double buffering increases the peak footprint.
 
 <span class="term">Optimizer State</span><br>
-Algorithms like Muon and Adam require per-parameter additional state, which grows with $m$ rather
-than $k$, and is typically FP32 even if weights are reduced precision. The K2 paper notes, "*after
+Algorithms like Muon and Adam require additional per-parameter state, which grows with $m$ rather
+than $k$, and is typically FP32 even if weights use reduced precision. The K2 paper notes, "*after
 reserving space for parameters, gradient buffers, and optimizer states, the remaining \[HBM\] is
 insufficient to hold the full MoE activations.*"
 
@@ -143,7 +142,7 @@ Below we describe a thought experiment for thinking about how these problems can
 top-k routing (without interventions like load balancing regularizers, capacity limits, etc.), and
 hence motivate those interventions. 
 
-Imagine we have several lakes (regions of the data manifold), each with varying number of fish (data
+Imagine we have several lakes (regions of the data manifold), each with varying numbers of fish (data
 samples). We need to allocate fishermen (experts) to these lakes, under competing constraints.
 
 To start, say we have just 2 lakes, with 10 and 4 fish respectively, and 2 fishermen. Allocating
@@ -255,7 +254,7 @@ discussed in subsequent sections.
 | **$b$ (Expert width)** | **2048** | **2048** |
 | **Learning Algorithm** | **AdamW** | **MuonClip** |
 | **Routing Control** | **Aux-loss-free dynamic bias** + lightweight **sequence-level** safeguard | **Simple top-k** (no grouping, no in-gate balancing) + **standard aux losses** |
-| **Dispersion Control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit; implicit via low EP** |
+| **Dispersion Control** | **Node-limited ($\leq 4$ nodes/token)** | **None explicit; implicit via low $d$** |
 | **Attention Mechanism** | **MLA** | **MLA** |
 | **Attention Heads**  | **128** | **64** |
 | **Parallelism Strategy** | **DualPipe** | **Interleaved 1F1B** |
@@ -265,8 +264,8 @@ discussed in subsequent sections.
 
 ## 6. Communication Optimizations
 ### 6.1 Forms of Parallelism
-Both models compose <span class="term">pipeline parallelism (PP)</span>, <span class="term">expert
-parallelism (EP)</span>, and [ZeRO-1 data parallelism (DP)](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html).
+Both models compose <span class="term">pipeline parallelism</span>, <span class="term">expert
+parallelism</span>, and [ZeRO-1 data parallelism](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/frameworks/torch/torch-neuronx/tutorials/training/zero1_gpt2.html).
 
 As we saw in Section 3, cross-node communication under expert parallelism unfavorably tips the
 balance of communication and computation. A natural step to counteract this, particularly with
@@ -300,8 +299,8 @@ not require an extra copy of parameters.
 
 Since K2 uses only 64 attention heads (compared to 128 in DV3), there is an increased need to
 reduce expert communication in order for it not to dominate during 1F1B. K2 achieves this
-by adopting "<span class="idea">the smallest feasible EP parallelization strategy</span>,"
-partitioning experts across just 16 devices. Note that lower EP implies more experts
+by adopting "<span class="idea">the smallest feasible expert parallelization strategy</span>,"
+partitioning experts across just $d=16$ devices. Note that lower $d$ implies more experts
 per GPU, which implicitly smooths load (even under *expert* imbalance, there's a higher
 likelihood of *GPU* balance, due to the law of large numbers).
 
@@ -332,8 +331,7 @@ K2 uses aggressive activation recomputation, applying it to LayerNorm, SwiGLU, M
 and MoE down-projections. DV3 applies activation recomputation to RMSNorm and MLA up-projections. 
 
 ### 7.2 CPU Offloading
-The basic idea of CPU offloading is to identify pieces of state that can be computed on GPUs then
-transferred to CPU RAM, or computed entirely on CPUs.
+The basic idea of CPU offloading is to identify pieces of state that can either be computed on GPUs and then transferred to CPU RAM, or computed entirely on CPUs.
 
 For activations that are not recomputed, K2 offloads them to CPU RAM, using a custom
 <span class="term">streaming copy engine</span> that overlaps with both compute and communication kernels in the 1F1B schedule.
