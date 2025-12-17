@@ -1,28 +1,6 @@
-
-Instead of a separate router network, we directly select experts based on their relevance to the
-input, as measured by the size of their read, which is the alignment between their subspace and the
-input vector.
-
-This is related to the intuition behind **k-means** and classical competitive learning:
-
-* In the b = 1 limit, each expert reduces to a single direction (a centroid).
-* In k-means, centroids compete for ownership of a data point, and each centroid moves to better represent the points it wins.
-* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete to capture energy from points in different regions of the manifold.
-
-
-### 2.3 Geometry of reads: incoherence and compressed sensing
-
-For the energy-capture competition setup to work, we need to address a couple natural failure modes.
-
-First, each expert can increase the size of |V_i x| by simply scaling its norm. We can fix this by
-constraining all columns of V to be unit norm.   
-
-A slightly more subtle point is that experts can “cheat” by all pointing in the same high variance directions.
-
-* Within an expert: each column of (V_i) can try to align with the top principal component of the data.
-* Across experts: different (V_i) can duplicate each other.
-
-That would maximize (|V_i^\top x|_2^2) for many tokens, but it defeats the whole point of an MoE. You end up with many copies of the same expert, not a diverse dictionary.
+* In our setup, experts **compete** to explain an input by capturing “energy” from different directions in representation space.
+* The goal is for experts to learn a set of near-orthogonal “views” of the residual stream that
+specialize to different regions of the input manifold.
 
 
 

@@ -4,23 +4,33 @@
 ## 1. Introduction
 
 Mixture of Experts (MoE) layers have become the dominant paradigm for decoupling parameter count
-from compute in large transformer models. A common framing of MoEs is one of dynamic conditional
+from compute in large transformer models. They rely on the simple observation that to fundamentally decrease latency, we must do less work. In the case of autoregressive models, we want to spend fewer flops to calculate the next token by selectively turning some parts of the network on or off at each time. Experts represent the unit of subnetwork that we toggle.
+
+A common framing of MoEs is one of dynamic conditional
 computation: we have a collection of experts, each an MLP, and we conditionally gate their outputs
 based on a lightweight router. From that perspective, functional specialization emerges from the
-router's partitioning of the input data manifold.
+router's partitioning of the input data manifold. Importantly, this has shown the empirical quality of specializing sub-networks into roughly the accuracy of an entire dense network.
 
-(We might start with a lighter framing here first - motivation of not wanting to do inference across a whole network. Setup of MOE assumes that individual subnetworks can do complete work on a per token basis. And we encourage this specialization during training by setting up the router with a top-k cap.)
+For all the [optimization](./moe.md) to make them tractable to train efficiently, the actual definition of a router is relatively simplistic. We apply a single learned vector against each expert's output to map it into a softmax probability that the expert is activated. The manner with which this vector is multiplied (token-level MoE, per-head, or concatenated) depends on the model. But every open sourced architecture from Kimi to DeepSeek to OpenAI OSS relies on this softmax probability for routing.
 
-TODO - briefly explain core problems/shortcomings - expert collapse/redundancy, dead experts, etc.
+This article assumes you're familiar with traditional [MoE basics](https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts) so we can explore their failure modes. This is the first part in a two part sequence: introducing alternative sparsity algorithms before experimenting with our own.
+
+### Limitations
+
+The classic issues encountered with MoEs are:
+
+* Under-specialization (several experts learning the same thing) 
+* "Dead experts" (some experts never getting selected by the router)
+* Load imbalance (some experts activating far more frequently than others)
+
+These all stem from the top-k filter that we do on the scores. Top selection is a hard non‑differentiable filter. During the forward pass we calculate the _currently_ maximum activating experts. Then we only backprop gradients through these experts and their activation heads. In standard implementations, there’s no gradient through the identity of who would have been selected if the scores changed a bit. Depending on how we randomly initialize their default weights, it's possible some experts will never activate at all (dead experts). Or some will always concurrently activate for the same input (under-specialization). Or there will simply be some numerical bias towards some over others because of where actual encoded data falls in the hidden space manifold (load imbalance).
 
 Our goal in this work is to rethink the MoE setup from the perspective of sparse representations,
-specifically leveraging principles from sparse coding and competitive learning. (TODO - add links).
-Some particular frames we will develop include: 
+specifically leveraging principles from [sparse coding](http://ufldl.stanford.edu/tutorial/unsupervised/SparseCoding/) and [competitive learning](https://labs.seas.wustl.edu/bme/raman/Lectures/Lecture10_CompetitiveLearning.pdf).
+Some particular frames we will develop include:
 
 * Each expert performs a low-rank read and a low-rank write, much like attention heads.
-* In our setup, experts **compete** to explain an input by capturing “energy” from different directions in representation space.
-* The goal is for experts to learn a set of near-orthogonal “views” of the residual stream that
-specialize to different regions of the input manifold.
+* Removing top-k filters do not immediately encourage experts to **compete** to explain an input.
 * Ultimately, what we're doing is learning a decomposition of the data manifold into combinations of
 low dimensional subspaces.
 
@@ -28,13 +38,9 @@ This lens connects MoEs to classical sparse coding, competitive learning, and co
 and suggests a set of design principles not visible if we think of MoEs purely as a form of
 conditional computation.
 
-TODO - clarify purpose of this article as framing/background, with our experiments coming in next
-article.
-
 We'll spell out this mental model more concretely in Section 2, and connect it to some classical
 work. In Section 3, we'll situate some recent papers along these themes within the frames we've
-developed. In Section 4, we'll expand on the specifics of the algorithm we have in mind as well as
-various open questions. 
+developed.
 
 ## 2. Core Frames
 
@@ -71,7 +77,11 @@ $\mathbb{R}^D \xrightarrow{\text{read } V_i^\top} \mathbb{R}^b \xrightarrow{f} \
 
 and these contributions add in the residual stream.
 
-This “low rank read + write” view is the starting point. It suggests a different question than “how do we route tokens.” The question becomes:
+Standard routing throws away the semantics of these independent read and write projections. Instead, it takes the full update and multiplies by the router weights p(x):
+
+$x \quad \mapsto \quad x + \sum_{i \in S} p_i(x)\, U_i f(V_i^\top x)$
+
+This “low rank read + write” view is our preferred primitive. It suggests a different question than “how do we route tokens.” The question becomes:
 
 How do we choose and train a set of low rank reads and writes so that
 1. expert contributions are non-redundant, i.e. the read-subspaces of pairs of experts are largely
@@ -96,6 +106,32 @@ This suggests a natural routing rule:
 
 For a given token, pick the experts that capture the most energy in their reads.
 More precisely, pick the top (k) experts by (|V_i^\top x|_2^2).
+
+Instead of a separate router network, we directly select experts based on their relevance to the
+input, as measured by the size of their read, which is the alignment between their subspace and the
+input vector.
+
+This is related to the intuition behind **k-means** and classical competitive learning:
+
+* In the b = 1 limit, each expert reduces to a single direction (a centroid).
+* In k-means, centroids compete for ownership of a data point, and each centroid moves to better represent the points it wins.
+* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete to capture energy from points in different regions of the manifold.
+
+
+### 2.3 Geometry of reads: incoherence and compressed sensing
+
+For the energy-capture competition setup to work, we need to address a couple natural failure modes.
+
+First, each expert can increase the size of |V_i x| by simply scaling its norm. We can fix this by
+constraining all columns of V to be unit norm.   
+
+A slightly more subtle point is that experts can “cheat” by all pointing in the same high variance directions.
+
+* Within an expert: each column of (V_i) can try to align with the top principal component of the data.
+* Across experts: different (V_i) can duplicate each other.
+
+That would maximize (|V_i^\top x|_2^2) for many tokens, but it defeats the whole point of an MoE. You end up with many copies of the same expert, not a diverse dictionary.
+
 
 ## 3. How existing work fits into the sparse coding / competition lens
 
@@ -264,14 +300,3 @@ This puts CompeteSMoE in an interesting position in the design space:
 * It does not yet connect that competition to a principled sparse coding geometry.
 
 One of the open questions for our direction is whether we want a similar two-stage story (competition during training, router at inference) or whether we can make the energy-based routing itself efficient enough to be the primary mechanism.
-
----
-
-This is a natural stopping point for (a) and (b). The next section can dive into our concrete architecture:
-
-* how we parameterize (V) and (U)
-* how we define and regularize energy-based competition
-* how we handle efficiency and distributed training
-* how this behaves in nanogpt-scale experiments
-
-We can shape that once you share the latest details for (c).
