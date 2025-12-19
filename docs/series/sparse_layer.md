@@ -23,7 +23,7 @@ softmax + Top‑$k$ pattern.
 
 This article assumes you're familiar with traditional [MoE basics](https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts) so we can focus on failure modes and alternative ways to think about sparsity. This is the first part in a two-part sequence: here we build a lens and situate recent work; next we get more concrete.
 
-### Limitations
+## 2. Limitations of MoEs
 
 The classic issues encountered with MoEs are:
 
@@ -50,7 +50,7 @@ Our goal in this work is to rethink the MoE setup from the perspective of sparse
 specifically leveraging principles from [sparse coding](http://ufldl.stanford.edu/tutorial/unsupervised/SparseCoding/) and [competitive learning](https://labs.seas.wustl.edu/bme/raman/Lectures/Lecture10_CompetitiveLearning.pdf).
 Some particular frames we will develop include:
 
-* Each expert performs a low-rank read and a low-rank write, much like attention heads.
+* Each expert in an MoE performs a low-rank read and a low-rank write, and selected experts interact additively, much like attention heads (assuming the expert width is smaller than the residual stream dimension).
 * Removing Top‑$k$ filters does not automatically encourage experts to **compete** to explain an input.
 * Ultimately, what we're doing is learning a decomposition of the data manifold into combinations of
 low dimensional subspaces.
@@ -63,9 +63,9 @@ We'll spell out this mental model more concretely in Section 2, and connect it t
 work. In Section 3, we'll situate some recent papers along these themes within the frames we've
 developed.
 
-## 2. Core Frames
+## 3. Core Frames
 
-### 2.1 From dense MLPs to expert dictionaries
+### 3.1 From Dense MLPs to Expert Dictionaries
 
 Consider a standard transformer block with residual stream dimension $D$. A dense MLP layer is a map
 
@@ -83,7 +83,11 @@ Let
 * $k$ = number of active experts
 * $D_2 = m b$ = total hidden width
 
-We can think of the hidden dimension as $m$ contiguous chunks (experts) of size $b$. Expert $i$ corresponds to:
+We can think of the hidden dimension as $m$ contiguous chunks (experts) of size $b$. We'll work in
+the setting where $b << D$, i.e. "narrow" or "fine-grained" experts. We'll later see why this makes
+sense both computationally and from a modeling perspective.
+
+Expert $i$ corresponds to:
 
 * a read submatrix $V_i \in \mathbb{R}^{D \times b}$
 * a write submatrix $U_i \in \mathbb{R}^{D \times b}$
@@ -96,30 +100,38 @@ If we freeze the set $S$, this is just a **sum of low rank updates**. Each exper
 
 $\mathbb{R}^D \xrightarrow{\text{read } V_i^\top} \mathbb{R}^b \xrightarrow{f} \mathbb{R}^b \xrightarrow{\text{write } U_i} \mathbb{R}^D$,
 
-and these contributions add in the residual stream.
+and these contributions add to the residual stream.
 
-Standard routing throws away the semantics of these independent read and write projections. Instead, it takes the full update and multiplies by the router weights p(x):
+Standard routing forms the full update by weighting the writes of selected experts by the router
+weights p(x):
 
 $x \quad \mapsto \quad x + \sum_{i \in S} p_i(x)\, U_i f(V_i^\top x)$
 
-This “low rank read + write” view is our preferred primitive. It suggests a different question than “how do we route tokens.” The question becomes:
+In our view, this standard approach to routing ignores the semantics of the "low rank read + write"
+view, which is our preferred primitive. In particular, with low rank readers, each expert only
+"sees" a $b$ dimensional subspace of the input space. This view allows us to move beyond asking
+"how do we route tokens?" and instead:
 
-How do we choose and train a set of low rank reads and writes so that
-1. expert contributions are non-redundant, i.e. the read-subspaces of pairs of experts are largely
-disjoint
-2. for each input, a **sparse subset** of experts captures most of the energy?
+1. Expert specialization becomes a question of how to efficiently/non-redundantly tile the
+input data manifold into low dimensional subspaces
 
-### 2.2 Experts as lights casting shadows: energy capture
+2. Expert selection becomes a question of selecting a sparse subset of experts
+whose read subspaces can jointly encode the given high dimensional input
 
+Both of these problems are intimately related to the classical problems of dictionary learning and
+sparse coding (TODO - links).
+
+### 3.2 Intuition: Low Rank Reads and Energy Capture
 One analogy to illuminate the energy capture view is to imagine a 3D object in a room behind a
 screen. You cannot see the object directly, and only see the shadows cast on the screen by different
-lights.
+lights. In this analogy:
 
-* The object is the true state of the residual stream $x$.
-* Each light corresponds to a read matrix $V_i$.
+* The object represents the true, high dimensional state of the residual stream $x$.
+* Each light corresponds to a low rank read matrix $V_i$.
 * The shadow on the screen is the hidden representation $h_i = V_i^\top x$.
 
-Depending on the angle and position of a light, its shadow can either squash the object into an uninformative blob or preserve enough structure to recognize it.
+Depending on the angle and position of a light, its shadow can either squash the object into an uninformative blob, or preserve enough structure to recognize it. We can judge the effectiveness of
+a particular light for this object by how much structure it preserves.
 
 In our setting, expert $i$ “sees” the input only through $h_i = V_i^\top x$. If $\lVert h_i\rVert_2^2$ is small, that expert is effectively blind to this token. If $\lVert h_i\rVert_2^2$ is large, the expert is capturing a big chunk of the **energy** of $x$ along the directions it cares about.
 
@@ -128,35 +140,42 @@ This suggests a natural routing rule:
 For a given token, pick the experts that capture the most energy in their reads.
 More precisely, pick the top‑$k$ experts by $\lVert V_i^\top x\rVert_2^2$.
 
-Instead of a separate router network, we directly select experts based on their relevance to the
-input, as measured by the size of their read, which is the alignment between their subspace and the
-input vector.
+Instead of a separate router network, we can directly select experts based on their relevance to the
+input, as measured by the size of their read, which is the alignment between their read subspace and
+the input vector.
 
-This is related to the intuition behind **k-means** and classical competitive learning:
+This is related to the intuition behind several classical algorithms, including k-means, PCA, and
+competitive learning:
 
-* In the $b = 1$ limit, each expert reduces to a single direction (a centroid).
+* In the $b = 1$ limit, each expert's read matrix reduces to a single vector $v_i$.
+* In Principal Components Analysis, we judge each principal
 * In k-means, centroids compete for ownership of a data point, and each centroid moves to better represent the points it wins.
-* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete to capture energy from points in different regions of the manifold.
+* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete
+to capture energy from points in different regions of the manifold.
 
 
-### 2.3 Geometry of reads: incoherence and compressed sensing
+### 3.3 Geometry of reads: incoherence and compressed sensing
 
 For the energy-capture competition setup to work, we need to address a couple natural failure modes.
 
-First, each expert can increase \(\lVert V_i^\top x\rVert_2\) by simply scaling its weights. We can
-fix this by constraining (or regularizing) the columns of \(V\) to have controlled norm.
+First, each expert can increase $\lVert V_i^\top x\rVert_2$ by simply scaling its weights. We can
+fix this by constraining (or regularizing) the columns of $V$ to have controlled norm.
 
 A slightly more subtle point is that experts can “cheat” by all pointing in the same high variance directions.
 
-* Within an expert: each column of \(V_i\) can try to align with the top principal component of the data.
-* Across experts: different \(V_i\) can duplicate each other.
+* Within an expert: each column of $V_i$ can try to align with the top principal component of the data.
+* Across experts: different $V_i$ can duplicate each other.
 
-That would maximize \(\lVert V_i^\top x\rVert_2^2\) for many tokens, but it defeats the point: you
+That would maximize $\lVert V_i^\top x\rVert_2^2$ for many tokens, but it defeats the point: you
 end up with many copies of the same expert, not a diverse dictionary.
 
-With energy activated scoring, it's important to be wary of these two ways that our gradient optimization can numerically hack to signal we are trying to competitively train. The same way that L2 encourages weights to not cheat on the train set by overfitting, competitive learning needs a similar regularization.
+The considerations here are quite similar to those in Principal Components Analysis: in order for
+each subsequent principal component to meaningfully capture new information, each component is
+constrained to be orthogonal to previous ones, and unit norm. In our setting, perfect orthogonality
+among the columns of $V$ is not possible, since $V$ has more columns than dimensions. However,
 
-## 3. How existing work fits into the sparse coding / competition lens
+
+## 4. How existing work fits into the sparse coding / competition lens
 
 A lot of recent MoE work touches pieces of this story:
 
@@ -172,11 +191,11 @@ We'll discuss the following papers:
 * *Sparse Mixture of Experts as Unified Competitive Learning* (USMoE)
 * *TopK Language Models*
 * *OMoE: Orthogonal Mixture of Experts*
-* work on representation collapse in SMoEs
+* Work on representation collapse in SMoEs
 * *Monet: Mixture of Monosemantic Experts for Transformers*
 * *CompeteSMoE*
 
-### 3.1 USMoE: a competition-flavored routing knob
+### 4.1 USMoE: a competition-flavored routing knob
 
 USMoE starts from an observation that is broadly aligned with the competitive learning lens:
 
@@ -195,7 +214,7 @@ So USMoE is useful as a diagnostic: it backs up the idea that competitive behavi
 
 For our purposes, it is a reminder that downstream tasks like embeddings are sensitive to subtle routing pathologies. It does not directly tell us how to design a better set of experts.
 
-### 3.2 TopK LMs: hard sparsity baked into the architecture
+### 4.2 TopK LMs: hard sparsity baked into the architecture
 
 TopK Language Models take a different tack. Instead of post-hoc sparse autoencoders (SAEs), they modify the transformer architecture so that certain hidden layers apply a **TopK activation**, turning the hidden state itself into the latent code of an SAE.
 
@@ -219,7 +238,7 @@ However, from a competitive learning and geometry perspective, TopK LMs largely 
 
 This makes TopK LMs a great **baseline** and sanity check. They show that you can make activations sparse without immediately tanking performance, and that doing so helps interpretability. They do not yet exploit the full space of ideas around energy-based competition and expert geometry.
 
-### 3.3 OMoE: orthogonalizing writes to fight redundancy
+### 4.3 OMoE: orthogonalizing writes to fight redundancy
 
 OMoE is motivated by a problem that is front and center in the sparse coding view: **expert homogeneity**. They point out that in many MoE models, expert representations end up highly similar, with some layers showing up to 99 percent similarity between experts.
 
@@ -247,7 +266,7 @@ From our sparse coding lens, OMoE is interesting but asymmetric:
 
 So OMoE provides evidence that explicitly encouraging diversity among experts is useful and trainable. It also suggests a complementary axis to ours: we focus on making reads well conditioned and diverse, they focus on orthogonalizing writes at run time. A more unified picture would reason jointly about both.
 
-### 3.4 Representation collapse in SMoEs: routing geometry as a failure mode
+### 4.4 Representation collapse in SMoEs: routing geometry as a failure mode
 
 Work on representation collapse in sparse MoEs starts from another pathology that becomes obvious once you look at routing through a geometric lens:
 
@@ -272,7 +291,7 @@ In contrast, if we route based on **read energy** (|V_i^\top x|_2^2) directly:
 
 So representation collapse papers are valuable in that they sharpen the diagnosis: naive routing geometries can distort the internal representation in harmful ways. Our approach tries to sidestep this by making the **dictionary itself** the geometry that routing is based on, and by shaping that dictionary to have good properties.
 
-### 3.5 Monet: scaling expert count via product keys
+### 4.5 Monet: scaling expert count via product keys
 
 Monet pursues a different axis: extremely large expert counts and mechanistic interpretability.
 
@@ -294,7 +313,7 @@ However, algorithmically the emphasis is on **indexing and scale**:
 
 From the sparse coding perspective, Monet is a “brute force” point in the design space: crank up expert count and add some sparse learning structure, without deeply shaping the underlying geometry. It shows that expert granularity and interpretability can be improved dramatically. It leaves open how much additional benefit we can get by being more deliberate about the dictionary itself.
 
-### 3.6 CompeteSMoE: approximating competition with a router
+### 4.6 CompeteSMoE: approximating competition with a router
 
 CompeteSMoE is probably the closest in spirit to the **energy-based competition** story.
 
