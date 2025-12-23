@@ -365,3 +365,4 @@ This puts CompeteSMoE in an interesting position in the design space:
 * It does not yet connect that competition to a principled sparse coding geometry.
 
 One of the open questions for our direction is whether we want a similar two-stage story (competition during training, router at inference) or whether we can make the energy-based routing itself efficient enough to be the primary mechanism.
+
