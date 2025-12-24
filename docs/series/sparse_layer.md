@@ -19,7 +19,7 @@ compute per token.
 This standard framing of MoEs is one of *conditional computation*. While it makes sense from a
 computational efficiency point of view, this framing says little about the actual *representations*
 learned by MoEs. Our view is that understanding the dynamics and failure modes of MoEs, and perhaps
-improving upon MoEs, requires developing a complementary perspective based on interpreting gated
+*improving* upon MoEs, requires developing a complementary perspective based on interpreting gated
 expert activations as sparse representations of the input. Our goal is to develop this perspective
 in stages. In this article, we'll draw on classical ideas from [sparse coding](http://ufldl.stanford.edu/tutorial/unsupervised/SparseCoding/)
 and [competitive learning](https://labs.seas.wustl.edu/bme/raman/Lectures/Lecture10_CompetitiveLearning.pdf), develop frames for thinking about MoE dynamics and failure
@@ -27,15 +27,22 @@ modes, and situate several recent works that explore similar ideas within these 
 we'll propose and evaluate some alternatives to MoEs that leverage these principles.
 
 Some particular frames we will develop include:
-* Each expert in an MoE performs a low-rank read and a low-rank write, and selected experts interact additively, much like attention heads (assuming the expert width is smaller than the residual stream dimension).
-* Removing Top‑$k$ filters does not automatically encourage experts to **compete** to explain an input.
-* Ultimately, what we're doing is learning a decomposition of the data manifold into combinations of
-low dimensional subspaces.
+* Each expert in an MoE performs a low rank read and a low rank write, and selected experts interact additively, much like [attention heads](TODO - link) (assuming the expert width is smaller than the
+residual stream dimension).
+* TopK selection (routing) is a form of implicit competition. The dynamics of this competition are
+linked to geometric regularizers on norms and angles between experts.
+* Ultimately, MoEs can be understood as learning a decomposition of the data manifold into
+combinations of low dimensional subspaces.
 
 These frames connect MoEs to classical ideas from sparse representation theory, and suggest a set of
 design principles not visible if we think of MoEs purely as a form of conditional computation. We'll spell out this mental model more concretely in Section 3, and connect it to some classical
 work. In Section 4, we'll situate some recent papers along these themes within the frames we've
 developed.
+
+## 1.2 Prerequisites
+We'll assume conceptual familiarity with MoEs, and will rely a fair amount on linear algebra
+concepts related to orthogonality, such as orthonormal matrices, Gram-Schmidt, and PCA
+(TODO - link). Prior background in sparse coding and dictionary learning is helpful but not strictly required.
 
 
 ## 2. Limitations of MoEs, and a Thought Experiment
@@ -57,7 +64,7 @@ others because of where actual encoded data falls in the hidden space manifold (
 
 ### 2.2 Lakes and Fishermen: A Thought Experiment
 Below we describe a thought experiment illustrating how these problems can arise under vanilla
-top-k routing (without interventions like load balancing regularizers, capacity limits, etc.), and
+TopK routing (without interventions like load balancing regularizers, capacity limits, etc.), and
 hence motivate those interventions. 
 
 Imagine we have several lakes (regions of the data manifold), each with varying numbers of fish (data
@@ -68,7 +75,7 @@ both fishermen to the lake with 10 fish is globally suboptimal (10 fish caught v
 optimal for each fisherman (5 fish each vs 4 if they switch), with no incentive (gradient) to
 switch to the uncovered lake. A third fisherman, who starts in a barren lake with no fish (bad
 expert initialization), starves
-(<span class="idea">zero gradient flow from hard top-k gating</span>) rather than switching to
+(<span class="idea">zero gradient flow from hard TopK gating</span>) rather than switching to
 the untapped second lake. A fourth,
 who discovers a populated lake with 100 fish, becomes disproportionately wealthy (load imbalance),
 <span class="idea">without any redistributive mechanism</span> (discrete routing creating a "rich
@@ -77,14 +84,14 @@ get richer" phenomenon).
 Of course, this thought experiment is a significant simplification and not an exact representation
 of the actual dynamics of MoE optimization, but it serves to illustrate the central tension between
 gradient-based optimization and the discrete structure imposed by sparsity. These issues make
-training MoEs tricky, necessitating careful
-<span class="term">auxiliary losses/regularizers</span> to ensure proper specialization and load balancing, plus monitoring during
-training to detect and revive dead experts.
+training MoEs tricky, typically necessitating careful
+<span class="term">auxiliary losses/regularizers</span> to ensure proper specialization and load
+balancing, plus monitoring during training to detect and revive dead experts.
 
 
-## 3. Core Frames
+## 3. Core Frames and Classical Ideas
 
-### 3.1 From Dense MLPs to Expert Dictionaries
+### 3.1 Expert Dictionaries and Low Rank Read-Write Systems
 
 Consider a standard transformer block with residual stream dimension $D$. A dense MLP layer is a map
 
@@ -141,6 +148,7 @@ Both of these problems are intimately related to the classical problems of dicti
 sparse coding (TODO - links).
 
 ### 3.2 Intuition: Low Rank Reads and Energy Capture
+
 One analogy to illuminate the energy capture view is to imagine a 3D object in a room behind a
 screen. You cannot see the object directly, and only see the shadows cast on the screen by different
 lights. In this analogy:
@@ -154,23 +162,18 @@ a particular light for this object by how much structure it preserves.
 
 In our setting, expert $i$ “sees” the input only through $h_i = V_i^\top x$. If $\lVert h_i\rVert_2^2$ is small, that expert is effectively blind to this token. If $\lVert h_i\rVert_2^2$ is large, the expert is capturing a big chunk of the **energy** of $x$ along the directions it cares about.
 
+Note that this is closely related to the ideas behind PCA, wherein principal components are selected
+based on the variance of the input data captured, and the objective function looks quite similar.
+
 This suggests a natural routing rule:
 
-For a given token, pick the experts that capture the most energy in their reads.
-More precisely, pick the top‑$k$ experts by $\lVert V_i^\top x\rVert_2^2$.
+<span class="idea">For a given token, pick the experts that capture the most energy in their reads.
+</span>.
+More precisely, pick the top $k$ experts by $\lVert V_i^\top x\rVert_2^2$.
 
-Instead of a separate router network, we can directly select experts based on their relevance to the
-input, as measured by the size of their read, which is the alignment between their read subspace and
-the input vector.
-
-This is related to the intuition behind several classical algorithms, including k-means, PCA, and
-competitive learning:
-
-* In the $b = 1$ limit, each expert's read matrix reduces to a single vector $v_i$.
-* In Principal Components Analysis, we judge each principal
-* In k-means, centroids compete for ownership of a data point, and each centroid moves to better represent the points it wins.
-* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete
-to capture energy from points in different regions of the manifold.
+Instead of a separate router network, we'd like to directly select experts based on their relevance
+to the input, as measured by the size of their read, which is the alignment between their read
+subspace and the input vector.
 
 
 ### 3.3 Geometry of reads: incoherence and compressed sensing
@@ -188,13 +191,29 @@ A slightly more subtle point is that experts can “cheat” by all pointing in 
 That would maximize $\lVert V_i^\top x\rVert_2^2$ for many tokens, but it defeats the point: you
 end up with many copies of the same expert, not a diverse dictionary.
 
-The considerations here are quite similar to those in Principal Components Analysis: in order for
-each subsequent principal component to meaningfully capture new information, each component is
-constrained to be orthogonal to previous ones, and unit norm. In our setting, perfect orthogonality
-among the columns of $V$ is not possible, since $V$ has more columns than dimensions. However,
+Again, the considerations here are quite similar to those in Principal Components Analysis: in order
+for each subsequent principal component to meaningfully capture new information, each component is
+constrained to be orthogonal to previous ones, and unit norm. In our setting though, perfect
+orthogonality among the columns of $V$ is not possible, since $V$ has more columns than dimensions.
+However, a form of <span class="idea">soft orthogonality</span> is possible: in $D$ dimensions,
+although we can only find up to $D$ perfectly orthogonal vectors, we can find exponentially many
+vectors that are approximately orthogonal (TODO - link). 
+
+### 3.4 Connections to PCA, K-Means, and Competitive Learning
+TODO - rewrite
+
+This is related to the intuition behind several classical algorithms, including k-means, PCA, and
+competitive learning:
+
+* In the $b = 1$ limit, each expert's read matrix reduces to a single vector $v_i$. 
+* In Principal Components Analysis, the matrix of principal components $V_{P}$ is the optimizer of precisely the energy capture expression above: 
+* In k-means, centroids compete for ownership of a data point, and each centroid moves to better represent the points it wins.
+* Here, each expert is a low dimensional subspace rather than a single vector, and experts compete
+to capture energy from points in different regions of the manifold.
 
 
 ## 4. How existing work fits into the sparse coding / competition lens
+TODO - links for each of these papers
 
 A lot of recent MoE work touches pieces of this story:
 
@@ -206,86 +225,75 @@ A lot of recent MoE work touches pieces of this story:
 Most of it, however, treats these as isolated knobs rather than as consequences of a single geometric picture. In this section we situate a few representative papers inside the sparse coding / competitive learning lens described above, and highlight what they do, what they miss, and how they inform our direction.
 
 We'll discuss the following papers:
-
-* *Sparse Mixture of Experts as Unified Competitive Learning* (USMoE)
 * *TopK Language Models*
+* *Sparse Mixture of Experts as Unified Competitive Learning* (USMoE)
 * *OMoE: Orthogonal Mixture of Experts*
 * Work on representation collapse in SMoEs
 * *Monet: Mixture of Monosemantic Experts for Transformers*
 * *CompeteSMoE*
 
-### 4.1 USMoE: a competition-flavored routing knob
+### 4.1 TopK Language Models: Native Hard Sparsity
 
-USMoE starts from an observation that is broadly aligned with the competitive learning lens:
+Perhaps the simplest instantiation of the "largest read wins" idea is to use a TopK activation
+function at the hidden layer of an MLP, which is the core idea in [TopK Language Models](TODO - link).
+We can interpret this as the limit case of an MoE, where
+$b = 1$ and the router is just the hidden state representation. Whereas Sparse Autoencoders (SAEs)
+extract post-hoc sparse representations of the residual stream, TopK LMs enforce these
+representations natively.
 
-* **Token choice** routing (selecting experts independently for each token) can over-focus on “irrelevant” experts for certain tasks (they emphasize text embeddings / MTEB).
-* **Expert choice** routing (allocating tokens to experts in a more global fashion) can discard important tokens.
+The TopK LM paper shares some motivations with our setup: routing based on read size, fine-grained
+sparsity, and learning interpretable features. However, there are several elements of our thinking
+that the TopK LM paper does not include:
 
-They frame these as two competitive learning regimes and propose a “unified competitive learning”
-scheme that interpolates between them by taking a <span class="term">convex combination</span> of
-token-choice and expert-choice scores.
+* Structured sparsity: there is no structured blocking of the hidden layer into experts.
+* There is no norm constraint to prevent certain hidden layer neurons from dominating by increasing
+their norms.
+* There is no attempt to encourage soft orthogonality, diversity, or non-redundancy among dictionary atoms, beyond whatever emerges from the task loss.
 
-From the sparse coding viewpoint:
+Empirically, the authors show that even with
+this simple setup, individual neurons in their trained model specialize, and can be
+used for concept steering (similar to SAEs, e.g. [Golden Gate Claude](TODO - link)).
 
-* USMoE stays in the **router-centric regime**. There is still a separate scoring network that operates in a low dimensional routing space.
-* Competition is defined over router scores, not over the actual energy captured by experts in the residual stream.
-* There is no explicit notion of expert geometry or dictionary conditioning.
+Overall, this makes TopK LM a great baseline and proof of concept for us.
 
-So USMoE is useful as a diagnostic: it backs up the idea that competitive behavior of experts matters for generalization, especially off the autoregressive training path. But algorithmically, it is a **routing knob**, not a rethink of what the experts are or how they interact with the residual stream.
 
-For our purposes, it is a reminder that downstream tasks like embeddings are sensitive to subtle routing pathologies. It does not directly tell us how to design a better set of experts.
+### 4.2 OMoE: Write-Side Orthogonalization
 
-### 4.2 TopK LMs: hard sparsity baked into the architecture
+OMoE is motivated by one of the central problems of the sparse representation view: **expert homogeneity**. They point out that in many MoE models, expert representations end up highly similar, with some layers showing up to 99 percent similarity between experts.
 
-TopK Language Models take a different tack. Instead of post-hoc sparse autoencoders (SAEs), they modify the transformer architecture so that certain hidden layers apply a **TopK activation**, turning the hidden state itself into the latent code of an SAE.
-
-Conceptually:
-
-* The read matrix $V$ is the incoming projection into the hidden layer.
-* A hard TopK nonlinearity enforces sparsity in the hidden activations.
-* The write matrix $U$ maps these sparse codes back to the residual stream.
-
-This is almost the simplest possible way to bake sparse coding into the forward pass. It shares some motivations with our setup:
-
-* Fine grained sparsity
-* Aligning model internals with a feature basis that is interpretable and steerable
-* Avoiding the ambiguity of post-hoc SAEs
-
-However, from a competitive learning and geometry perspective, TopK LMs largely stop at “TopK exists”:
-
-* There is no structured blocking of the dictionary into experts.
-* There is no explicit competition story beyond “be in the top k activations.”
-* There is no attempt to encourage approximate orthogonality, diversity, or non-redundancy among dictionary atoms, beyond whatever emerges from the task loss.
-
-This makes TopK LMs a great **baseline** and sanity check. They show that you can make activations sparse without immediately tanking performance, and that doing so helps interpretability. They do not yet exploit the full space of ideas around energy-based competition and expert geometry.
-
-### 4.3 OMoE: orthogonalizing writes to fight redundancy
-
-OMoE is motivated by a problem that is front and center in the sparse coding view: **expert homogeneity**. They point out that in many MoE models, expert representations end up highly similar, with some layers showing up to 99 percent similarity between experts.
-
-Their fix is to introduce an **orthogonal expert optimizer** that, for each input, orthogonalizes the **writes** of the active experts. Roughly:
+Their fix is to introduce an **orthogonal expert optimizer** that, for each input, orthogonalizes
+the **writes** of the active experts. Roughly:
 
 * Given the per-expert outputs, they apply a Gram–Schmidt-like procedure so that later experts contribute only the components of their output that are not already spanned by earlier experts.
 * This implicitly penalizes redundant experts, since redundant directions get projected away and receive less gradient signal.
 
-The grocery-shopping analogy is helpful here:
+As an analogy: you send multiple shoppers to buy groceries. When they return, you unpack them one by one, keeping only the items that nobody has bought yet and throwing away duplicates. Shoppers who
+keep buying bananas after others already did will have most of their contribution discarded, and
+over time learn to specialize in other parts of the shopping list.
 
-> You send multiple shoppers to buy groceries. When they return, you unpack them one by one. For each shopper, you keep only the items that nobody has bought yet and throw away duplicates.
-> Shoppers who keep buying bananas after others already did will have most of their contribution discarded. Over time they learn to specialize in other parts of the shopping list.
+From our sparse coding lens:
 
-In the MoE context:
-
-* The “shopping list” is the residual stream update.
-* Experts whose writes lie in already-covered directions get their contributions projected out and starve of gradient.
-* This encourages diversity in what experts write back, without ever touching the read side.
-
-From our sparse coding lens, OMoE is interesting but asymmetric:
-
-* It operates entirely on **activations**, not on weights.
+* OMoE operates entirely on **activations**, not on weights.
 * It attacks redundancy in **writes**, whereas our focus is primarily on the **read geometry** and weight-level incoherence.
 * It enforces a strict, input-dependent orthogonalization that may throw away useful signal, rather than asking for approximate orthogonality in the learned dictionary itself.
 
-So OMoE provides evidence that explicitly encouraging diversity among experts is useful and trainable. It also suggests a complementary axis to ours: we focus on making reads well conditioned and diverse, they focus on orthogonalizing writes at run time. A more unified picture would reason jointly about both.
+So OMoE provides evidence that explicitly encouraging diversity among experts is useful and trainable. It also suggests a complementary axis to ours: we focus on making reads well conditioned and diverse, they focus on orthogonalizing writes at run time.
+
+
+### 4.3 USMoE: a competition-flavored routing knob
+
+USMoE frames routing in MoEs using a competitive learning lens, and argues that token choice and
+expert choice routing are two ends of a spectrum that each have distinct problems:
+
+* **Token choice** routing (selecting experts independently for each token) can over-focus on “irrelevant” experts for certain tasks (they emphasize text embeddings / MTEB).
+* **Expert choice** routing (allocating tokens to experts in a more global fashion) can discard important tokens.
+
+The paper shows that we can interpolate between these two paradigms using a <span class="term">convex
+combination</span> of token-choice and expert-choice scores, and this hybrid strategy empirically
+mitigates downsides of both individual strategies.
+
+While not a complete rethink of routing, USMoE bolsters the idea that competitive behavior of
+experts matters for generalization. 
 
 ### 4.4 Representation collapse in SMoEs: routing geometry as a failure mode
 
